@@ -1,0 +1,20 @@
+[package]
+name = "skymp-launcher"
+version = "0.1.0"
+description = "SkyMP Open Launcher – Tauri backend"
+authors = []
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "1.5", features = ["shell-execute", "fs-write-file"] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

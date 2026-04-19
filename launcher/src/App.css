@@ -1,0 +1,123 @@
+:root {
+  --bg: #0f0f14;
+  --bg-card: #1a1a24;
+  --accent: #7c5cbf;
+  --accent-hover: #9b7de0;
+  --text: #e8e8f0;
+  --text-muted: #888899;
+  --danger: #e05c5c;
+  --border: #2a2a3a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.app-header {
+  margin-bottom: 1.5rem;
+}
+
+.app-header h1 {
+  font-size: 1.8rem;
+  color: var(--accent-hover);
+  margin-bottom: 1rem;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--accent);
+}
+
+.btn-refresh {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+
+.btn-refresh:hover:not(:disabled) { background: var(--border); }
+.btn-refresh:disabled { opacity: 0.5; cursor: default; }
+
+.error {
+  color: var(--danger);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.empty {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.server-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.server-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.15s;
+}
+
+.server-card:hover { border-color: var(--accent); }
+
+.server-info { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.server-name { font-size: 1rem; font-weight: 600; }
+
+.server-address { font-size: 0.8rem; color: var(--text-muted); }
+
+.server-meta { display: flex; align-items: center; gap: 1rem; }
+
+.player-count { font-size: 0.85rem; color: var(--text-muted); }
+
+.btn-join {
+  padding: 0.4rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-join:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-join:disabled { opacity: 0.5; cursor: default; }
