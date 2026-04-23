@@ -1,0 +1,167 @@
+name: Auto Version Tag
+
+on:
+  workflow_run:
+    workflows:
+      - "CI"
+    types:
+      - completed
+    branches:
+      - "**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-tag-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  version-and-tag:
+    name: Calculate SemVer and create tag
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Determine next version
+        id: version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git fetch --tags origin
+          $lastTag = (git tag --list 'v*' | Sort-Object { [version]($_.TrimStart('v')) } -Descending | Select-Object -First 1)
+
+          if (-not $lastTag) {
+            $baseVersion = 'none'
+            $commitLog = git log --pretty=format:'%s%n%b'
+          } else {
+            $baseVersion = $lastTag.TrimStart('v')
+            $commitLog = git log "$lastTag..HEAD" --pretty=format:'%s%n%b'
+          }
+
+          if ([string]::IsNullOrWhiteSpace($commitLog)) {
+            "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "should_tag=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+
+          $releaseKind = ''
+          if ($commitLog -match '(?im)BREAKING CHANGE:|^[a-z]+(\([^)]+\))?!:') {
+            $releaseKind = 'release'
+          } elseif ($commitLog -match '(?im)^feat(\([^)]+\))?:') {
+            $releaseKind = 'update'
+          } elseif ($commitLog -match '(?im)^(fix|perf|refactor)(\([^)]+\))?:') {
+            $releaseKind = 'hotfix'
+          }
+
+          if (-not $releaseKind -and $commitLog -match '(?i)(^|[^a-z])(release)([^a-z]|$)') {
+            $releaseKind = 'release'
+          } elseif (-not $releaseKind -and $commitLog -match '(?i)(^|[^a-z])(update)([^a-z]|$)') {
+            $releaseKind = 'update'
+          } elseif (-not $releaseKind -and $commitLog -match '(?i)(^|[^a-z])(hotfix)([^a-z]|$)') {
+            $releaseKind = 'hotfix'
+          }
+
+          if (-not $releaseKind) {
+            "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "release_kind=none" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "should_tag=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+
+          if ($baseVersion -eq 'none') {
+            switch ($releaseKind) {
+              'release' { $nextVersion = '1.0.0' }
+              'update' { $nextVersion = '0.1.0' }
+              default { $nextVersion = '0.0.1' }
+            }
+          } else {
+            $v = [version]$baseVersion
+            $major = $v.Major
+            $minor = $v.Minor
+            $patch = $v.Build
+
+            switch ($releaseKind) {
+              'release' {
+                $major += 1
+                $minor = 0
+                $patch = 0
+              }
+              'update' {
+                $minor += 1
+                $patch = 0
+              }
+              'hotfix' {
+                $patch += 1
+              }
+            }
+
+            $nextVersion = "$major.$minor.$patch"
+          }
+
+          $nextTag = "v$nextVersion"
+
+          $tagExistsLocal = git rev-parse -q --verify "refs/tags/$nextTag" 2>$null
+          $tagExistsRemote = git ls-remote --tags origin "refs/tags/$nextTag"
+          if ($tagExistsLocal -or $tagExistsRemote) {
+            "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "release_kind=$releaseKind" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "next_version=$nextVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "next_tag=$nextTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "should_tag=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+
+          "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "release_kind=$releaseKind" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "next_version=$nextVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "next_tag=$nextTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "should_tag=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Create and push tag
+        if: steps.version.outputs.should_tag == 'true'
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ steps.version.outputs.next_tag }}
+          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git fetch --tags origin
+          $remoteTag = git ls-remote --tags origin "refs/tags/$env:TAG_NAME"
+          if ($remoteTag) {
+            Write-Host "Tag already exists on origin; skipping"
+            exit 0
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$env:TAG_NAME" "$env:TARGET_SHA" -m "Release $env:TAG_NAME"
+
+          try {
+            git push origin "refs/tags/$env:TAG_NAME"
+          } catch {
+            $remoteTagAfter = git ls-remote --tags origin "refs/tags/$env:TAG_NAME"
+            if ($remoteTagAfter) {
+              Write-Host "Tag was created by another run; treating as success"
+              exit 0
+            }
+            throw
+          }
+
+      - name: Write summary
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Auto Version Tag"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Last version: ${{ steps.version.outputs.base_version || 'none' }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Release kind: ${{ steps.version.outputs.release_kind || 'n/a' }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- New tag: ${{ steps.version.outputs.next_tag || 'none' }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Tag created: ${{ steps.version.outputs.should_tag || 'false' }}"

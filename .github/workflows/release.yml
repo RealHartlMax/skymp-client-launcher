@@ -1,0 +1,247 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag to release (for example v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  prepare:
+    name: Resolve tag and release notes
+    runs-on: windows-latest
+    outputs:
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+      release_title: ${{ steps.notes.outputs.release_title }}
+      release_kind: ${{ steps.notes.outputs.release_kind }}
+      release_body: ${{ steps.notes.outputs.body }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        id: tag
+        shell: pwsh
+        env:
+          INPUT_TAG: ${{ inputs.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          if ($env:INPUT_TAG) {
+            $tagName = $env:INPUT_TAG
+          } else {
+            $tagName = "${{ github.ref_name }}"
+          }
+
+          if ($tagName -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Invalid tag '$tagName'. Expected vX.Y.Z"
+          }
+
+          "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build release notes
+        id: notes
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git fetch --force --tags origin
+
+          $allTags = git tag --list 'v*' | Sort-Object { [version]($_.TrimStart('v')) } -Descending
+          $previousTag = $allTags | Where-Object { $_ -ne $env:TAG_NAME } | Select-Object -First 1
+
+          $currentVersion = $env:TAG_NAME.TrimStart('v')
+          $currentParts = $currentVersion.Split('.')
+          $currentMajor = [int]$currentParts[0]
+          $currentMinor = [int]$currentParts[1]
+          $currentPatch = [int]$currentParts[2]
+
+          if ($previousTag) {
+            $previousVersion = $previousTag.TrimStart('v')
+            $prevParts = $previousVersion.Split('.')
+            $previousMajor = [int]$prevParts[0]
+            $previousMinor = [int]$prevParts[1]
+            $previousPatch = [int]$prevParts[2]
+          } else {
+            $previousVersion = 'none'
+            $previousMajor = 0
+            $previousMinor = 0
+            $previousPatch = 0
+          }
+
+          $releaseKind = 'Release'
+          if ($previousVersion -eq 'none') {
+            if ($currentVersion -eq '0.1.0') {
+              $releaseKind = 'Update'
+            } elseif ($currentVersion -eq '0.0.1') {
+              $releaseKind = 'Hotfix'
+            }
+          } elseif ($currentMajor -gt $previousMajor) {
+            $releaseKind = 'Release'
+          } elseif ($currentMinor -gt $previousMinor) {
+            $releaseKind = 'Update'
+          } elseif ($currentPatch -gt $previousPatch) {
+            $releaseKind = 'Hotfix'
+          }
+
+          if ($previousTag) {
+            $range = "$previousTag..$env:TAG_NAME"
+          } else {
+            $range = $env:TAG_NAME
+          }
+
+          $subjects = git log $range --pretty=format:'%s'
+          if (-not $subjects) {
+            $subjects = @('Initial release')
+          }
+
+          $items = @()
+          foreach ($line in $subjects) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            $items += "- $line"
+          }
+
+          $bodyLines = @(
+            "## SkyMP Launcher $releaseKind $($env:TAG_NAME)",
+            "",
+            "- Release type: $releaseKind",
+            "- Previous version: $previousVersion",
+            "- Current version: $currentVersion",
+            "",
+            "### Changes",
+            $items,
+            "",
+            "### Build",
+            "- Windows",
+            "- Tauri + React",
+            "- Rust stable"
+          )
+
+          "release_kind=$releaseKind" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "release_title=SkyMP Launcher $releaseKind $($env:TAG_NAME)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $bodyLines | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+  build:
+    name: Build Windows launcher
+    needs: prepare
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        shell: pwsh
+        run: |
+          Set-Location launcher
+          if (Test-Path package-lock.json) {
+            npm ci
+          } else {
+            npm install
+          }
+
+      - name: Build Tauri app
+        shell: pwsh
+        run: |
+          Set-Location launcher
+          npx tauri build
+
+      - name: Prepare release artifacts
+        id: artifacts
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.prepare.outputs.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $version = $env:TAG_NAME.TrimStart('v')
+          $exeSource = "launcher/src-tauri/target/release/SkyMP Launcher.exe"
+          if (!(Test-Path $exeSource)) {
+            throw "Expected launcher executable not found: $exeSource"
+          }
+
+          $exeName = "SkyMp-Client-v$version.exe"
+          Copy-Item $exeSource $exeName -Force
+
+          $zipName = "SkyMp-Client-v$version-windows-x64.zip"
+          Compress-Archive -Path "launcher/src-tauri/target/release/*" -DestinationPath $zipName -Force
+
+          "exe_name=$exeName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "zip_name=$zipName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: |
+            ${{ steps.artifacts.outputs.exe_name }}
+            ${{ steps.artifacts.outputs.zip_name }}
+
+  publish:
+    name: Publish GitHub release
+    needs: [prepare, build]
+    runs-on: windows-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.prepare.outputs.tag_name }}
+          RELEASE_TITLE: ${{ needs.prepare.outputs.release_title }}
+          RELEASE_BODY: ${{ needs.prepare.outputs.release_body }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $notesFile = New-TemporaryFile
+          Set-Content -Path $notesFile -Value $env:RELEASE_BODY -Encoding UTF8
+
+          $releaseExists = $false
+          try {
+            gh release view $env:TAG_NAME --repo $env:GH_REPO | Out-Null
+            $releaseExists = $true
+          } catch {
+            $releaseExists = $false
+          }
+
+          if ($releaseExists) {
+            gh release edit $env:TAG_NAME --repo $env:GH_REPO --title $env:RELEASE_TITLE --notes-file $notesFile
+          } else {
+            gh release create $env:TAG_NAME --repo $env:GH_REPO --title $env:RELEASE_TITLE --notes-file $notesFile
+          }
+
+          Get-ChildItem -Path dist -Recurse -File | ForEach-Object {
+            gh release upload $env:TAG_NAME $_.FullName --repo $env:GH_REPO --clobber
+          }
