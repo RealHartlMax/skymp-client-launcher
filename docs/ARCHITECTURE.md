@@ -24,8 +24,8 @@ The infrastructure is split across multiple subdomains, each with a specific rol
 6.  The frontend makes a GET request to `api.skymp-worlds.net/list.php`.
 7.  The **API Backend** returns all non-draft servers with recent heartbeats as a structured JSON array.
 8.  The **Frontend** parses the JSON and displays the server list to the player.
-9.  The player clicks "Connect" in the launcher. The launcher writes the selected server's IP and port to the local `connection.json` file and starts the game.
-10. The **C++ Client Plugin** (in-game) reads `connection.json` and injects the IP/port into the game's memory, connecting the player to the server.
+9.  The player clicks "Connect" in the launcher. The launcher writes the selected server target to `Data/Platform/Plugins/skymp5-client-settings.txt` and starts the game through SKSE.
+10. The **C++ Client Plugin** (in-game) reads the launcher-provided settings file and connects to the selected server.
 
 ## 🔁 SkyMP Compatibility Notes
 

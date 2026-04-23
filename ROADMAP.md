@@ -12,9 +12,9 @@
 
 | Aufgabe | Komponente | Status |
 |---|---|---|
-| SKSE-Plugin liest IP/Port aus `connection.json` | Client Plugin (C++) | ⬜ Offen |
+| SKSE-Plugin liest Zielserver aus `skymp5-client-settings.txt` | Client Plugin (C++) | ⬜ Offen |
 | Minimale REST-API mit `GET /list` und `POST /announce` | Master Server | ✅ Skeleton vorhanden |
-| CLI-Skript: schreibt `connection.json` und startet SKSE | Launcher | ⬜ Offen |
+| Launcher-Join schreibt `skymp5-client-settings.txt` und startet SKSE | Launcher | ✅ Implementiert |
 
 ### Phase 2 – Launcher & UI (Alpha)
 
@@ -24,9 +24,9 @@
 |---|---|---|
 | Tauri-Projekt aufsetzen | Launcher | ✅ Skeleton vorhanden |
 | Server-Browser UI (Liste, Suche, Spielerzahl) | Launcher Frontend | ✅ Skeleton vorhanden |
-| Skyrim-Installationspfad automatisch erkennen | Launcher | ⬜ Offen |
-| SKSE korrekt aus dem Launcher heraus starten | Launcher (Tauri/Rust) | ⬜ Offen |
-| `connection.json` automatisch schreiben beim Join | Launcher | ⬜ Offen |
+| Skyrim-Installationspfad automatisch erkennen | Launcher | ✅ Implementiert |
+| SKSE korrekt aus dem Launcher heraus starten | Launcher (Tauri/Rust) | ✅ Implementiert |
+| `skymp5-client-settings.txt` automatisch schreiben beim Join | Launcher | ✅ Implementiert |
 
 ### Phase 3 – Server-Ökosystem (Beta)
 
@@ -59,9 +59,9 @@
 
 | Task | Component | Status |
 |---|---|---|
-| SKSE plugin reads IP/Port from `connection.json` | Client Plugin (C++) | ⬜ Open |
+| SKSE plugin reads target server from `skymp5-client-settings.txt` | Client Plugin (C++) | ⬜ Open |
 | Minimal REST API with `GET /list` and `POST /announce` | Master Server | ✅ Skeleton ready |
-| CLI script: writes `connection.json` and launches SKSE | Launcher | ⬜ Open |
+| Launcher join writes `skymp5-client-settings.txt` and launches SKSE | Launcher | ✅ Implemented |
 
 ### Phase 2 – Launcher & UI (Alpha)
 
@@ -71,9 +71,9 @@
 |---|---|---|
 | Set up Tauri project | Launcher | ✅ Skeleton ready |
 | Server browser UI (list, search, player count) | Launcher Frontend | ✅ Skeleton ready |
-| Auto-detect Skyrim installation path | Launcher | ⬜ Open |
-| Launch SKSE correctly from the launcher | Launcher (Tauri/Rust) | ⬜ Open |
-| Auto-write `connection.json` on join | Launcher | ⬜ Open |
+| Auto-detect Skyrim installation path | Launcher | ✅ Implemented |
+| Launch SKSE correctly from the launcher | Launcher (Tauri/Rust) | ✅ Implemented |
+| Auto-write `skymp5-client-settings.txt` on join | Launcher | ✅ Implemented |
 
 ### Phase 3 – Server Ecosystem (Beta)
 
@@ -106,9 +106,9 @@
 
 | Задача | Компонент | Статус |
 |---|---|---|
-| SKSE-плагин читает IP/Port из `connection.json` | Клиентский плагин (C++) | ⬜ Открыта |
+| SKSE-плагин читает целевой сервер из `skymp5-client-settings.txt` | Клиентский плагин (C++) | ⬜ Открыта |
 | Минимальный REST API: `GET /list` и `POST /announce` | Мастер-сервер | ✅ Скелет готов |
-| CLI-скрипт: записывает `connection.json` и запускает SKSE | Лаунчер | ⬜ Открыта |
+| Join в лаунчере записывает `skymp5-client-settings.txt` и запускает SKSE | Лаунчер | ✅ Реализовано |
 
 ### Фаза 2 – Лаунчер и UI (Альфа)
 
@@ -118,9 +118,9 @@
 |---|---|---|
 | Настройка Tauri-проекта | Лаунчер | ✅ Скелет готов |
 | UI браузера серверов (список, поиск, количество игроков) | Фронтенд лаунчера | ✅ Скелет готов |
-| Автоопределение пути установки Skyrim | Лаунчер | ⬜ Открыта |
-| Корректный запуск SKSE из лаунчера | Лаунчер (Tauri/Rust) | ⬜ Открыта |
-| Автозапись `connection.json` при входе на сервер | Лаунчер | ⬜ Открыта |
+| Автоопределение пути установки Skyrim | Лаунчер | ✅ Реализовано |
+| Корректный запуск SKSE из лаунчера | Лаунчер (Tauri/Rust) | ✅ Реализовано |
+| Автозапись `skymp5-client-settings.txt` при входе на сервер | Лаунчер | ✅ Реализовано |
 
 ### Фаза 3 – Экосистема серверов (Бета)
 

@@ -1,14 +1,8 @@
 local-builds/
+web/*
 
 # Launcher build/test artifacts
 launcher/node_modules/
 launcher/dist/
 launcher/src-tauri/target/
 launcher/test-launcher.exe
-
-# Runtime/local-only dashboard artifacts
-web/manage.skymp-worlds.net/storage/state.json
-web/manage.skymp-worlds.net/manage.skymp-worlds.net.zip
-
-# Web deployment archives
-web/**/*.zip

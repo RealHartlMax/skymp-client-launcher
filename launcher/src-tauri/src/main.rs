@@ -1,10 +1,9 @@
 // SkyMP Launcher – Tauri backend (Rust)
 //
 // Responsibilities (v0.1.0):
-//   1. Write connection.json with the chosen server's IP and port
-//   2. Write skymp5-client-settings.txt into Skyrim Data/Platform/Plugins
-//   3. Locate the Skyrim installation directory (configured or auto-detected)
-//   4. Launch the SKSE loader
+//   1. Write skymp5-client-settings.txt into Skyrim Data/Platform/Plugins
+//   2. Locate the Skyrim installation directory (configured or auto-detected)
+//   3. Launch the SKSE loader
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -105,11 +104,6 @@ fn join_server(
     server_master_key: Option<String>,
 ) -> Result<(), String> {
     let config = ConnectionConfig { ip, port };
-    let json = serde_json::to_string_pretty(&config)
-        .map_err(|e| e.to_string())?;
-
-    let config_path = get_config_path()?;
-    fs::write(&config_path, json).map_err(|e| e.to_string())?;
 
     let skyrim_path = resolve_skyrim_dir(skyrim_dir)?;
     write_skymp_client_settings(&skyrim_path, &config, master_url, server_master_key)?;
@@ -303,15 +297,6 @@ fn import_skymp_settings_with_language(skyrim_dir: Option<String>, language: Opt
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-fn get_config_path() -> Result<PathBuf, String> {
-    let app_data = std::env::var("APPDATA")
-        .map_err(|_| "APPDATA environment variable not found".to_string())?;
-
-    let dir = PathBuf::from(app_data).join("SkyMP");
-    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("connection.json"))
-}
 
 fn write_skymp_client_settings(
     skyrim_dir: &PathBuf,
