@@ -216,6 +216,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -231,6 +236,17 @@ jobs:
           RELEASE_BODY: ${{ needs.prepare.outputs.release_body }}
         run: |
           $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          git fetch --force --tags origin
+
+          $remoteTag = git ls-remote --tags origin "refs/tags/$env:TAG_NAME"
+          if (-not $remoteTag) {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$env:TAG_NAME" "$env:GITHUB_SHA" -m "Release $env:TAG_NAME"
+            git push origin "refs/tags/$env:TAG_NAME"
+          }
 
           $notesFile = New-TemporaryFile
           Set-Content -Path $notesFile -Value $env:RELEASE_BODY -Encoding UTF8
