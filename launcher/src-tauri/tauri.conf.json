@@ -26,7 +26,7 @@
       }
     },
     "bundle": {
-      "active": true,
+      "active": false,
       "targets": "all",
       "identifier": "io.skymp.launcher",
       "icon": ["icons/icon.png"]
@@ -36,11 +36,14 @@
     },
     "windows": [
       {
+        "center": true,
         "fullscreen": false,
         "resizable": true,
         "title": "SkyMP Launcher",
-        "width": 1024,
-        "height": 640
+        "width": 1280,
+        "height": 820,
+        "minWidth": 860,
+        "minHeight": 620
       }
     ]
   }

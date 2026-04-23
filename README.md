@@ -21,9 +21,9 @@ Vier Kernkomponenten arbeiten zusammen:
 
 | Komponente | Technologie | Aufgabe |
 |---|---|---|
-| Client Plugin | C++ / SKSE | Liest Server-IP dynamisch aus `connection.json` |
+| Client Plugin | C++ / SKSE | Liest Verbindungsziel dynamisch aus `Data/Platform/Plugins/skymp5-client-settings.txt` |
 | Launcher (Frontend) | Tauri + React/TS | Server-Browser, Einstellungen, Spielstart |
-| Master Server (Backend) | Node.js / Go | Registry-API für Heartbeats & Serverliste |
+| Master Server (Backend) | PHP / MySQL | Registry-API für Heartbeats & Serverliste (läuft auf `api.skymp-worlds.net`) |
 | Dedicated Server | C++ (SkyMP) | Sendet Heartbeat, registriert sich automatisch |
 
 ### 🗺️ Roadmap
@@ -56,9 +56,9 @@ Four core components working together:
 
 | Component | Technology | Responsibility |
 |---|---|---|
-| Client Plugin | C++ / SKSE | Reads server IP dynamically from `connection.json` |
+| Client Plugin | C++ / SKSE | Reads connection target dynamically from `Data/Platform/Plugins/skymp5-client-settings.txt` |
 | Launcher (Frontend) | Tauri + React/TS | Server browser, settings management, game launch |
-| Master Server (Backend) | Node.js / Go | Registry API for heartbeats & server list |
+| Master Server (Backend) | PHP / MySQL | Registry API for heartbeats & server list (runs on `api.skymp-worlds.net`) |
 | Dedicated Server | C++ (SkyMP) | Sends heartbeat, registers itself automatically |
 
 ### 🗺️ Roadmap
@@ -79,8 +79,13 @@ skymp-client-launcher/
 ├── launcher/           # Tauri + React desktop app (server browser)
 │   ├── src/            # React/TypeScript frontend
 │   └── src-tauri/      # Rust backend (Tauri)
-├── master-server/      # Node.js registry API
-│   └── src/            # Express routes & server logic
+├── web/
+│   ├── landing-page/   # Multi-language landing page (HTML/CSS/JS)
+│   └── api.skymp-worlds.net/ # PHP/MySQL registry API
+│       ├── heartbeat.php   # Heartbeat ingest / upsert
+│       ├── list.php        # Public server list
+│       ├── servers.sql     # Registry schema
+│       └── api/servers/    # Compatibility endpoint (/api/servers)
 ├── docs/               # Architecture diagrams & additional docs
 └── ROADMAP.md          # Detailed phased roadmap
 ```
@@ -104,9 +109,9 @@ SkyMP – это впечатляющее техническое достиже�
 
 | Компонент | Технология | Задача |
 |---|---|---|
-| Клиентский плагин | C++ / SKSE | Читает IP сервера динамически из `connection.json` |
+| Клиентский плагин | C++ / SKSE | Читает цель подключения динамически из `Data/Platform/Plugins/skymp5-client-settings.txt` |
 | Лаунчер (фронтенд) | Tauri + React/TS | Браузер серверов, настройки, запуск игры |
-| Мастер-сервер (бэкенд) | Node.js / Go | Registry API для хартбитов и списка серверов |
+| Мастер-сервер (бэкенд) | PHP / MySQL | Registry API для хартбитов и списка серверов (работает на `api.skymp-worlds.net`) |
 | Игровой сервер | C++ (SkyMP) | Отправляет хартбит, автоматически регистрируется |
 
 ### 🗺️ Дорожная карта
