@@ -26,6 +26,8 @@ Vier Kernkomponenten arbeiten zusammen:
 | Master Server (Backend) | PHP / MySQL | Registry-API für Heartbeats & Serverliste (läuft auf `api.skymp-worlds.net`) |
 | Dedicated Server | C++ (SkyMP) | Sendet Heartbeat, registriert sich automatisch |
 
+**API-Austausch:** Die zentrale Plattform für den Austausch zwischen Launcher, Servern und Master-Server ist [https://skymp-worlds.net/](https://skymp-worlds.net/) (bzw. deren Subdomains).
+
 ### 🗺️ Roadmap
 
 Detaillierte Roadmap: [ROADMAP.md](ROADMAP.md)
@@ -60,6 +62,8 @@ Four core components working together:
 | Launcher (Frontend) | Tauri + React/TS | Server browser, settings management, game launch |
 | Master Server (Backend) | PHP / MySQL | Registry API for heartbeats & server list (runs on `api.skymp-worlds.net`) |
 | Dedicated Server | C++ (SkyMP) | Sends heartbeat, registers itself automatically |
+
+**API Exchange:** The central platform for communication between launcher, servers, and master server is [https://skymp-worlds.net/](https://skymp-worlds.net/) (and its subdomains).
 
 ### 🗺️ Roadmap
 
@@ -113,6 +117,8 @@ SkyMP – это впечатляющее техническое достиже�
 | Лаунчер (фронтенд) | Tauri + React/TS | Браузер серверов, настройки, запуск игры |
 | Мастер-сервер (бэкенд) | PHP / MySQL | Registry API для хартбитов и списка серверов (работает на `api.skymp-worlds.net`) |
 | Игровой сервер | C++ (SkyMP) | Отправляет хартбит, автоматически регистрируется |
+
+**API-обмен:** Центральная платформа для обмена между лаунчером, серверами и мастер-сервером — это [https://skymp-worlds.net/](https://skymp-worlds.net/) (и её поддомены).
 
 ### 🗺️ Дорожная карта
 
