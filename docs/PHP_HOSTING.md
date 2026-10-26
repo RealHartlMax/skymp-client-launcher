@@ -1,5 +1,7 @@
 # PHP-Webhosting mit eigenständigen Subdomains
 
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
 Für den optionalen Crashreport-Dienst siehe [Einrichtung auf Deutsch](CRASH_REPORTS_SETUP.de.md),
 [English](CRASH_REPORTS_SETUP.en.md) oder [Русский](CRASH_REPORTS_SETUP.ru.md).
 Berichte liegen im geschützten DEV-Ordner reports oder alternativ außerhalb der öffentlichen Webroots; der bestehende API- und
@@ -33,7 +35,7 @@ DEV, API, Verwaltung und die übrigen Webseiten laufen im PHP-Webhosting. Nur de
 Gameserver läuft auf dem VPS. Die Webeinrichtung erfolgt im Hosting-Panel bzw.
 per Dateimanager/FTP; VPS-SSH, Node und Änderungen an server-settings.json sind
 für den Report-Dienst nicht nötig. Nach dem bereits erledigten Upload mit der
-[DEV-Einrichtung ab Schritt 2](DEV_PORTAL_SETUP.de.md#2-report-verzeichnis-auf-dem-webhosting-anlegen)
+[DEV-Einrichtung ab Schritt 2](DEV_PORTAL_SETUP.de.md#2-report-ordner-im-dev-webroot-verwenden)
 fortfahren. Der private Report-Pfad ist ein absoluter Dateisystempfad dieses
 Webhosting-Kontos, kein VPS-Pfad und keine URL.
 
@@ -109,10 +111,7 @@ sowie `/api/servers/...` an `native.php` geroutet werden; das bisherige
 
 5. Server geordnet neu starten. Sein nativer Heartbeat wird anhand des Dashboard-
    Schlüssels geprüft. Er erscheint danach mit den Download-/Master-Adressen in der Liste.
-6. Im Launcher den Servernamen suchen, die Detailseite öffnen und **Verbinden** wählen.
-   Benötigte Dateien werden dabei automatisch vorbereitet. Im vom Spiel
-   geöffneten Browser mit demselben Dashboard-Konto anmelden und die **Spielanmeldung
-   ausdrücklich bestätigen**. Danach zum Spiel zurückkehren.
+6. Im Launcher Steam starten, den Servernamen suchen und **Verbinden** wählen. Der Spielserver prüft das Steam-Ticket und gegebenenfalls die Freigabe unter Whitelist. Nur wenn seine Antwort `accountLoginRequired` verlangt, zusätzlich die Legacy-Spielanmeldung mit einem Dashboard-Konto im Browser bestätigen. Benötigte Dateien werden vor dem Start vorbereitet; ein bloßes Webkonto ersetzt keine Steam-Freigabe.
 
 Das Gateway behält den Fork-Routennamen `login-discord` aus Kompatibilitätsgründen;
 die Anmeldung verwendet vorhandene Dashboard-Konten. Discord-OAuth wird dadurch nicht
@@ -133,7 +132,7 @@ API und Dashboard brauchen daher keine gemeinsame Ordnerhierarchie.
 node tests/php-master-smoke.mjs
 ```
 
-Im Ausgabeordner liegen sechs unabhängige ZIP-Dateien, ohne Sammel-ZIP. Das zur Domain passende
+Im Ausgabeordner liegen sieben unabhängige ZIP-Dateien, ohne Sammel-ZIP. Das zur Domain passende
 ZIP entpacken und seinen Inhalt in deren Webroot kopieren. Die gesamte Projektstruktur
 ist zusätzlich unter `web/` enthalten. Konfigurationen, Konten, Schlüssel und Datenbanken
 sind ausgeschlossen. Der optionale Node-Referenzdienst ist nicht Teil des PHP-Uploads.
@@ -265,3 +264,7 @@ Einrichtung: [DE](DEV_PORTAL_SETUP.de.md), [EN](DEV_PORTAL_SETUP.en.md),
 Die optionale Discord-Webanmeldung ist mit einem privaten Client-Secret auf dem PHP-Webhosting nutzbar. Bestehende Konten werden ausdrücklich nach der Passwortanmeldung verknüpft. Einrichtung: [Deutsch](DISCORD_SETUP.de.md), [English](DISCORD_SETUP.en.md), [Русский](DISCORD_SETUP.ru.md). Die öffentliche App-ID für den separaten Launcher-Aktivitätsstatus ist bereits hinterlegt. Keine Secrets in den Launcher aufnehmen.
 
 Neue Konto-, Interface- und Spieleinstellungen: [DE / EN / RU](LAUNCHER_SETTINGS.md). Der neue Server-Ressourcenbereich erfordert beide Backends und das Dashboard-Frontend aus dem Server-Fork; hier wird nur der Launcher gebaut.
+
+## Launcher-Release und Webpakete getrennt halten
+
+Ein GitHub-Release des Launchers besteht nur aus EXE, portablem ZIP und `SHA256SUMS`; siehe [RELEASING.md](RELEASING.md). Die sieben Domain-ZIPs gehören ausschließlich in ihre jeweiligen Webroots. Eine GitHub-Veröffentlichung aktualisiert weder `version.json` noch Runtime-Kataloge im Hosting automatisch. Name und Spielerlimit werden nur auf dem Gameserver gesetzt; das Web übernimmt sie aus authentifizierten Heartbeats.

@@ -75,8 +75,11 @@ $firstReadmeText = Get-Content -LiteralPath $firstReadme -Raw
 $firstReadmeText = [regex]::Replace($firstReadmeText, '\]\(([A-Z][A-Za-z0-9_.-]+\.md(?:#[a-zA-Z0-9_-]+)?)\)', '](docs/$1)')
 Set-Content -LiteralPath $firstReadme -Value $firstReadmeText -Encoding utf8NoBOM
 New-Item -ItemType Directory -Path (Join-Path $outputRoot 'docs') | Out-Null
-foreach ($document in @('LOCAL_AND_LIVE.md', 'PHP_HOSTING.md', 'CONNECTING.md', 'MODPACK_PROTOCOL.md', 'RUNTIME_UPDATES.md', 'SERVER_OWNER_GUIDE.de.md', 'SERVER_OWNER_GUIDE.en.md', 'SERVER_OWNER_GUIDE.ru.md', 'CRASH_REPORTS.md', 'CRASH_REPORTS_SETUP.de.md', 'CRASH_REPORTS_SETUP.en.md', 'CRASH_REPORTS_SETUP.ru.md', 'DEV_PORTAL_SETUP.de.md', 'DEV_PORTAL_SETUP.en.md', 'DEV_PORTAL_SETUP.ru.md', 'LAUNCHER_SETTINGS.md', 'DISCORD_SETUP.de.md', 'DISCORD_SETUP.en.md', 'DISCORD_SETUP.ru.md')) {
-    Copy-Item -LiteralPath (Join-Path $projectRoot "docs/$document") -Destination (Join-Path $outputRoot "docs/$document")
+foreach ($document in @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'docs') -File -Filter '*.md')) {
+    Copy-Item -LiteralPath $document.FullName -Destination (Join-Path $outputRoot "docs/$($document.Name)")
+}
+foreach ($document in @('README.md', 'CHANGELOG.md', 'ROADMAP.md', 'CONTRIBUTING.md', 'LICENSE')) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot $document) -Destination (Join-Path $outputRoot $document)
 }
 foreach ($site in $sites) {
     $domain = $site.domain

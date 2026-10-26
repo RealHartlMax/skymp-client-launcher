@@ -1,50 +1,45 @@
-# Contributing to SkyMP Open Launcher
+# Contributing to SkyMP Worlds Launcher
 
-Checked against the local project on **22 October 2026**. Start with
-[current status](docs/STATUS.md), [developer setup](docs/SETUP.md),
-[server connection](docs/CONNECTING.md) and [PHP hosting](docs/PHP_HOSTING.md).
+Documentation reviewed **26 October 2026**, launcher **0.2.0**. Start with the [documentation index](docs/README.md), [development guide](docs/DEVELOPMENT.md) and [current validation scope](docs/STATUS.md).
 
 ## Components
 
-- `launcher/`: Tauri 1 / React / TypeScript frontend and Rust preparation backend.
-- `web/`: independent PHP/static webroots. The PHP master uses the existing
-  Manage dashboard's accounts. See the config examples and schemas in those roots.
-- `master-api/`: optional Node.js 24+ / SQLite reference with separate local accounts.
-- The native/in-game SkyMP client and game server are in the separate
-  `skymp` repository. There is no standalone `client-plugin/*.vcxproj` project here.
+- `launcher/`: Tauri 1, React/TypeScript and the Rust preparation/authentication/diagnostic backend.
+- `web/`: independent local PHP/static webroots and shared launcher assets. This tree is currently ignored by Git; a fresh checkout requires the shared inputs listed in the development guide.
+- `master-api/`: optional Node.js 24+ reference with isolated local accounts.
+- Native game client and game server: separate [SkyMP fork](https://github.com/RealHartlMax/skymp).
 
-## Desktop development
+## Build and validate
 
-Use Node/npm, a Rust toolchain and the platform's configured Tauri/C++ build
-prerequisites. The local checked toolchain uses Node.js 24 on Windows.
+After supplying the required shared build assets:
 
 ```powershell
 cd launcher
 npm ci
 npm run build
 npm run test:backend
-npm run tauri dev
+npm run tauri -- build
 ```
 
-For a headless Rust-only test, `npm run test:backend` uses
-`--no-default-features --lib`. See [runtime updates](docs/RUNTIME_UPDATES.md)
-for package/catalog tools and `node tests/runtime-packaging.mjs` from the repo root.
-Tests use separate temporary fixtures and must not start Skyrim implicitly.
+Use `npm run tauri -- dev` for desktop development. The browser-only Vite page cannot invoke native commands. Release assets and manual publication are described in [RELEASING.md](docs/RELEASING.md); do not package the entire Cargo target directory.
 
-## PHP and hosting
+Run the checks relevant to the change. Record passed, failed and excluded tests separately. A package, loopback or browser-simulation result is not a multiplayer qualification. The release currently has 69 passing Rust tests and three excluded integration tests; see its dated evidence rather than treating these numbers as permanent.
 
-Use the actual `web/api.skymp-worlds.net/` and
-`web/manage.skymp-worlds.net/` paths; the old `api-backend-php/` paths do not exist.
-PHP config files contain deployment-specific values and remain private.
-The upload order, schemas and local isolated PHP checks are documented in
-[PHP_HOSTING.md](docs/PHP_HOSTING.md) and [LOCAL_AND_LIVE.md](docs/LOCAL_AND_LIVE.md).
+## Changes and documentation
 
-## Validation and changes
+- Keep DE/EN/RU UI strings and language-specific operator instructions aligned.
+- Update behavior in the source guide; avoid stacking contradictory dated addenda.
+- Preserve stable explicit handbook anchors so existing links keep working.
+- Keep original game files, external edits, private configuration, account data and server/world state recoverable.
+- Do not log keys, Steam tickets, access tokens or unrestricted configuration.
+- Distinguish the launcher, native runtime, VPS service and PHP deployment when describing a fix.
 
-Report the exact test/package scope. A build or loopback download is not a
-Skyrim/CEF gameplay result. Keep credentials, server/world data and valid
-original-file backups intact. Do not treat a roadmap checkbox as proof of a
-live deployment; record that acceptance separately.
+The development branch is `main`; version tags use names such as `v0.2.0`. Avoid assigning a branch and a tag the same name. Do not move an existing release tag or publish artifacts as a side effect of a documentation change.
 
-Use existing TypeScript/Rust style and submit focused changes with the relevant
-checks. Bug reports should include component/version, reproduction and redacted logs.
+Bug reports should identify the component/build, reproduction steps and sanitized diagnostics. The launcher's report export can supply a bounded report; full dumps require separate consent.
+
+## Documentation checks
+
+Check relative links and anchors, example JSON and language alignment. Render the operator handbooks with `node scripts/build-docs.mjs` when their source changes; this needs the complete local web/shared source tree. A documentation update does not rebuild the launcher or publish the generated website.
+
+Community: [Discord](https://discord.gg/NSXtNNbjuR). Project license: [GPL-3.0](LICENSE).

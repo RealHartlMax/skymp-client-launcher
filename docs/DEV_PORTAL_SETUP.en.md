@@ -1,6 +1,8 @@
 # Set up the developer portal on PHP webhosting
 
-Updated 2026-10-25. Configuration steps after uploading the three domain ZIPs.
+Documentation reviewed **2026-10-26**, launcher **0.2.0**.
+
+Configuration steps after uploading the three domain ZIPs.
 
 ## Hosting responsibilities
 
@@ -132,3 +134,5 @@ Keep the complete previous private directory including index.json/report.key whe
 Website ZIPs do not contain that data. On the same webhosting DEV may use the existing suitable
 private report directory. Analyze dumps locally with matching PDB symbols. Real hosting paths,
 PHP permissions, HTTPS and hosting limits must be configured in the provider panel.
+
+This setup concerns PHP webhosting or the listed launcher settings. Launcher, game-server and native runtime packages remain separate. [Documentation index](README.md) · [Launcher release](RELEASING.md).

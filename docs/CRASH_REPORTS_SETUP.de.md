@@ -1,6 +1,8 @@
 # Absturzberichte einrichten
 
-Stand: 25.10.2026. Die Berichte landen jetzt im eigenständigen Entwicklerbereich
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
+Die Berichte landen jetzt im eigenständigen Entwicklerbereich
 **dev.skymp-worlds.net**. Die vollständige Anleitung für die drei Webroots,
 Entwicklerfreigabe, privaten Speicher, Hosting-Limits und Wartung steht in
 [DEV_PORTAL_SETUP.de.md](DEV_PORTAL_SETUP.de.md).
@@ -18,3 +20,5 @@ Die Umstellung des Webbereichs benötigt keinen neuen Launcher.
 Ein Launcher-Build enthält keine neue native Spiel-DLL. Die Threadpool-Korrektur
 braucht weiterhin einen eigenen nativen Clientbuild und ein neues Runtime-Paket.
 Technische Details: [CRASH_REPORTS.md](CRASH_REPORTS.md).
+
+Die Einrichtung betrifft PHP-Webhosting bzw. die genannten Launcher-Einstellungen. Launcher-, Server- und native Runtime-Pakete bleiben getrennt. [Dokumentationsübersicht](README.md) · [Launcher-Release](RELEASING.md).

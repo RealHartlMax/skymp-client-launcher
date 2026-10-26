@@ -1,6 +1,8 @@
 # Configure crash reporting
 
-Updated 2026-10-25. Reports now go to the independent developer portal
+Documentation reviewed **2026-10-26**, launcher **0.2.0**.
+
+Reports now go to the independent developer portal
 **dev.skymp-worlds.net**. The complete three-webroot setup, developer access,
 private storage, hosting limits and maintenance are documented in
 [DEV_PORTAL_SETUP.en.md](DEV_PORTAL_SETUP.en.md).
@@ -18,3 +20,5 @@ This web routing change does not require a launcher rebuild.
 The launcher does not bundle a rebuilt native game DLL. The thread-pool
 source fix still needs its own native client build and updated runtime package.
 Technical details: [CRASH_REPORTS.md](CRASH_REPORTS.md).
+
+This setup concerns PHP webhosting or the listed launcher settings. Launcher, game-server and native runtime packages remain separate. [Documentation index](README.md) · [Launcher release](RELEASING.md).

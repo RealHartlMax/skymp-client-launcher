@@ -1,5 +1,7 @@
 # Serververbindung und automatische Dateien
 
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
 Der Launcher verwendet den Ressourcen-Vertrag des Forks in `D:\GitHub\skymp`.
 Serverliste, Spielserver, Dateiserver und Anmeldeserver sind getrennte Adressen.
 Es gibt keine fest eingebaute Spielserver-IP. Ein Profil speichert diese Angaben
@@ -18,7 +20,7 @@ SkyMP-Einstellungen liegt ebenfalls unter **Direktverbindung**.
 2. Auf einen Treffer klicken, um Beschreibung, Spielerzahl, Tags, Zugang und
    Community-Links zu sehen. Das Öffnen der Details startet keine Verbindung.
 3. **Verbinden** prüft die Installation, lädt die benötigten Dateien und startet
-   anschließend Skyrim. Fortschritt und Fehler erscheinen direkt auf der Detailseite.
+   anschließend Skyrim. Der Splashscreen zeigt den Fortschritt und schließt sich nach bestätigtem Start des echten Skyrim-Prozesses automatisch. Bei Startfehlern bleibt er sichtbar; die normale Detailseite enthält weiterhin Status und Diagnose.
 4. Favoriten bleiben gespeichert; der Verlauf enthält erfolgreich gestartete Verbindungen.
    Beim Zurückgehen bleiben Suchtext, Filter und Listenposition erhalten.
 
@@ -52,17 +54,11 @@ Der Import verwendet **127.0.0.1** für einen Server auf demselben Rechner.
 Für einen anderen Rechner zuerst dessen erreichbare IP/Domain eintragen und dann importieren.
 Bei einem Reverse Proxy die externe Dateiserver-Basis-URL angeben, z.B. `https://play.example.org/`.
 
-**Online-Anmeldung:** Der Build bleibt im Online-Modus. Für das vorhandene PHP-Hosting
-implementieren `web/manage.skymp-worlds.net/native-master.php` und das API-Gateway die
-Benutzer- und Sitzungsrouten des Forks. Sie verwenden die vorhandenen Dashboard-Konten
-und Servereinträge, ohne einen Node-Dienst oder gemeinsame Webroot-Pfade.
-Upload, Konto-/Serverregistrierung und die vier erforderlichen Servereinstellungen
-stehen in [PHP_HOSTING.md](PHP_HOSTING.md). `master-api/` bleibt eine optionale,
-unabhängige Node-Referenz für Entwicklungstests.
-Der Launcher verwendet die öffentliche `serverUid`, wenn sie vorhanden ist.
-Der private `masterKey` bleibt für den Heartbeat auf dem Server. Alte Masters ohne
-getrennte öffentliche ID können weiterhin ihren bisherigen Routing-Key verwenden.
-Ein Wechsel des Modus nur im Launcher ändert die Authentifizierung des Servers nicht.
+**Anmeldung nach Server-Policy:** Beim aktuellen Steam-Zugang läuft Steam im Hintergrund. Der Launcher holt die Policy unter `/api/launcher/auth-policy`, fordert ein Ticket für genau deren Dienstkennung an und übergibt es an `/api/launcher/auth/steam`. Der Server prüft die Identität und entscheidet über Freigabe/Whitelist. Ein zusätzliches SkyMP-Webkonto ist nur nötig, wenn die Serverantwort `accountLoginRequired` verlangt.
+
+Ausstehende Freigaben werden im Gameserver-Dashboard unter **Whitelist / Spielerzugang** bearbeitet. Der Spieler muss noch nicht in der Liste verbundener Spielfiguren stehen. Steam-ID, Anzeigename und RP-Charakter sind getrennt; eine Namensänderung vergibt keine neue Identität.
+
+Für eine erforderliche Legacy-Kontoanmeldung bleibt der PHP-Master mit den bestehenden Dashboard-Konten verfügbar. Die öffentliche `serverUid` gehört ins Launcher-Profil; der private Heartbeat-`masterKey` bleibt auf dem Gameserver. Ein Wechsel zu „offline“ nur im Launcher umgeht die Server-Policy nicht. Details: [Steam und Legacy](STEAM_AUTHENTICATION.md), [PHP-Hosting](PHP_HOSTING.md).
 
 ## Was vor dem Start passiert
 
@@ -204,3 +200,9 @@ Ports und einer getrennten Testanmeldung. Er prüft Heartbeat, Online-Sitzung,
 Master-Manifest, Downloadroute, die fünf echten
 Masterdateien, Runtime-Installation, Cache und Wiederherstellung. Alle Änderungen bleiben
 im neuen Testverzeichnis; Skyrim wird nicht gestartet. Das Ergebnis steht in `report.json`.
+
+## English / Русский
+
+Select the game folder, start Steam, choose a server and connect. Complete server packages provide matching SKSE/client files automatically. The splash closes after confirmed process startup; that does not mean world loading is finished. Steam approval is managed under Whitelist/player access. Browser account login is only required by the server policy.
+
+Выберите папку игры, запустите Steam и подключитесь к серверу. Полный пакет сервера автоматически предоставляет подходящие SKSE и клиентские файлы. Экран подключения закрывается после подтверждения запуска процесса; мир может ещё загружаться. Допуск Steam управляется в Whitelist/доступе игроков. Вход в веб-аккаунт требуется только по правилам сервера.

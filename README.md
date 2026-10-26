@@ -1,182 +1,117 @@
-# 🛠️ SkyMP Open Launcher Initiative (WIP)
+# SkyMP Worlds Launcher
 
-Launcher-Einstellungen mit Spielernamen, Streamer-Modus, Audio, Sprachen und Discord-Aktivitätsstatus:
-[DE / EN / RU](docs/LAUNCHER_SETTINGS.md). Discord-Webanmeldung und ausdrückliche Kontoverknüpfung:
-[DE](docs/DISCORD_SETUP.de.md) · [EN](docs/DISCORD_SETUP.en.md) · [RU](docs/DISCORD_SETUP.ru.md).
+**Version 0.2.0 · Windows x64 · Tauri / React / Rust**
 
-Steam-Pflicht für Server r5, Gastzugang ohne Worlds-Konto und Legacy-Login:
-[Steam authentication / Steam-Anmeldung / Вход через Steam](docs/STEAM_AUTHENTICATION.md).
+[Deutsch](#deutsch) · [English](#english) · [Русский](#русский)
 
-Crashreports mit Datenvorschau, lokalem Export, separater Minidump-Freigabe und geschützter PHP-Verwaltung:
-[Konzept und Umsetzung](docs/CRASH_REPORTS.md) · Einrichtung [DE](docs/CRASH_REPORTS_SETUP.de.md),
-[EN](docs/CRASH_REPORTS_SETUP.en.md), [RU](docs/CRASH_REPORTS_SETUP.ru.md).
-Der eigenständige Entwicklerbereich unter **dev.skymp-worlds.net** empfängt die Berichte
-über die bestehende API und verwendet freigegebene Verwaltungskonten:
-[Einrichtung DE](docs/DEV_PORTAL_SETUP.de.md) · [EN](docs/DEV_PORTAL_SETUP.en.md) · [RU](docs/DEV_PORTAL_SETUP.ru.md).
-Der Launcher fordert native Steam-Tickets an, ohne die Steam-DLL des Spiels zu ersetzen.
-Die aktuelle lokale EXE und die unabhängigen Web-ZIPs liegen in `local-builds/current/`.
-Das separat gebaute Threadpool-Clientpaket wurde aus `D:/GitHub/skymp/build/client-delivery-2026-10-25-threadpool/` übernommen. Ein vollständiger Spieltest bleibt erforderlich.
+[Downloads auf GitHub](https://github.com/RealHartlMax/skymp-client-launcher/releases) · [Dokumentation](docs/README.md) · [Änderungen](CHANGELOG.md) · [Discord](https://discord.gg/NSXtNNbjuR)
 
-Launcher-Verbindung zum aktuellen Server-Fork, automatische Dateipruefung/-downloads,
-Serverprofile und lokale Tests: [Verbindungsanleitung](docs/CONNECTING.md).
-Modpakete mit Dateigroesse/SHA-256, Unterverzeichnissen und optionalem Clientpaket
-werden vor dem Spielstart vorbereitet: [Betreiber- und API-Anleitung](docs/MODPACK_PROTOCOL.md).
-Client, SKSE und Address Library lassen sich pro Skyrim-Version über einen externen
-[Versionskatalog aktualisieren](docs/RUNTIME_UPDATES.md), ohne die Launcher-EXE neu zu bauen.
+## Deutsch
 
-Vollständiges Betreiberhandbuch für `docs.skymp-worlds.net`:
-[Deutsch](docs/SERVER_OWNER_GUIDE.de.md) · [English](docs/SERVER_OWNER_GUIDE.en.md) ·
-[Русский](docs/SERVER_OWNER_GUIDE.ru.md). Eigener statischer Webroot und eigene Domain-ZIP;
-bestehende kompatible Server integrieren oder den [Server-Fork](https://github.com/RealHartlMax/skymp)
-verwenden, jeweils ohne Kompatibilitätsgarantie. Upload: [PHP-Webhosting](docs/PHP_HOSTING.md).
+SkyMP Worlds ist ein Launcher für unabhängige Skyrim-Multiplayer-Server. Suche einen Server, sieh dir seine Details an und verbinde dich. Vor dem Start prüft der Launcher die benötigten Dateien und lädt die vom Server bereitgestellten Mod- und Clientpakete herunter.
 
-**Status audit: 22 October 2026.** [Completed work and remaining acceptance](docs/STATUS.md).
-The locally built preview is in `local-builds/current/`; game/CEF and live rollout
-are still separate acceptance steps.
+### Starten
 
-[🇩🇪 Deutsch](#-deutsch) · [🇬🇧 English](#-english) · [🇷🇺 Русский](#-русский)
+1. Die **EXE oder das portable ZIP** aus einem GitHub-Release herunterladen. Beim ZIP zuerst alle Dateien entpacken.
+2. Steam starten. Im Launcher unter **Einstellungen → Spiel** den Skyrim-Special-Edition-Ordner auswählen und prüfen.
+3. Unter **Server entdecken** suchen, die Serverdetails öffnen und **Verbinden** wählen.
 
----
+Benötigt werden Windows x64 mit Microsoft Edge WebView2 Runtime, Steam und eine vom Server unterstützte Skyrim-Version. Ein vollständiges Server-Clientpaket stellt auch das passende SKSE und die Address Library bereit. Ein manueller SKSE-Einbau ist dann nicht nötig. Der Server muss das passende Paket tatsächlich anbieten; die Launcher-EXE enthält keine Spiel-Runtime.
 
-## 🇩🇪 Deutsch
+Der Splashscreen zeigt Dateiprüfung, Downloads und Spielstart. Er schließt sich automatisch, sobald der Start des echten Skyrim-Prozesses bestätigt wurde. Das Spiel behält den Fokus. Bei einem Startfehler bleiben Meldung und Rückweg sichtbar.
 
-> **ACHTUNG: WORK IN PROGRESS (WIP)**
-> Eine lokale Preview 0.2.0 mit Serverbrowser, Mod-/Clientpaket-Vorbereitung und PHP-Master ist gebaut und automatisiert geprüft. Die vollständige Skyrim-/CEF-Spielprüfung und öffentliche Betriebsfreigabe stehen noch aus. Beiträge und Tests sind willkommen.
+### Enthalten in 0.2.0
 
-### 🌟 Die Vision
+- Serverbrowser mit Suche, Filtern, Sortierung, Favoriten, Verlauf und Detailseiten.
+- Länderflaggen, öffentliche Serverbilder, Spielerzahlen sowie Online-/Offline-Anzeige.
+- Mod- und Clientpakete mit Größen-/SHA-256-Prüfung, Downloadcache und serverseitiger Mod-Ladereihenfolge.
+- Gesicherte Originaldateien, Wiederherstellung und Schutz extern geänderter Dateien beim Serverwechsel.
+- Steam-Anmeldung und ein eigener Spielername zusätzlich zur bestätigten Steam-ID.
+- Deutsch, Englisch und Russisch; Streamer-Modus, optionaler Hintergrundklang und Discord-Aktivitätsstatus.
+- Prozessüberwachung und Absturzberichte mit Vorschau, lokalem Export und optionalem Versand. Speicherabbilder benötigen eine gesonderte Freigabe.
 
-SkyMP ist eine beeindruckende technische Leistung. Um jedoch das volle Potenzial auszuschöpfen – ähnlich wie bei **FiveM** oder **RedM** – benötigen wir eine Infrastruktur, die Dezentralisierung erlaubt.
+Weitere Spielserver lassen sich über **Direktverbindung** eintragen. Der zentrale Listen-Endpunkt ist fest; das Spielziel wird pro Server gewählt.
 
-Ziel dieses Projekts ist es, einen **universellen Launcher** und eine **Master-Server-Infrastruktur** zu schaffen. Weg von der fest kodierten Server-IP, hin zu einer lebendigen Community-Serverliste, auf der jeder seinen eigenen Skyrim-Server hosten und bewerben kann.
+### Hilfe und Veröffentlichung
 
-### 🏗️ System-Architektur
+[Verbindung und Dateien](docs/CONNECTING.md) · [Einstellungen](docs/LAUNCHER_SETTINGS.md) · [Steam und Whitelist](docs/STEAM_AUTHENTICATION.md) · [Absturzberichte](docs/CRASH_REPORTS.md)
 
-Vier Kernkomponenten arbeiten zusammen:
+Für GitHub werden ausschließlich die drei Dateien aus `local-builds/releases/v0.2.0/upload/` verwendet: EXE, portables ZIP und `SHA256SUMS`. Details stehen in der [Anleitung für manuelle Releases](docs/RELEASING.md). Server, Webseiten und native Spiel-Runtime haben eigene Pakete und Veröffentlichungswege.
 
-| Komponente | Technologie | Aufgabe |
-|---|---|---|
-| Client Plugin | C++ / SKSE | Liest Verbindungsziel dynamisch aus `Data/Platform/Plugins/skymp5-client-settings.txt` |
-| Launcher (Frontend) | Tauri + React/TS | Server-Browser, Einstellungen, Spielstart |
-| Master Server (Backend) | PHP / MySQL | Registry-API für Heartbeats & Serverliste (läuft auf `api.skymp-worlds.net`) |
-| Dedicated Server | C++ (SkyMP) | Sendet Heartbeat, registriert sich automatisch |
+## English
 
-**API-Austausch:** Die zentrale Plattform für den Austausch zwischen Launcher, Servern und Master-Server ist [https://skymp-worlds.net/](https://skymp-worlds.net/) (bzw. deren Subdomains).
+SkyMP Worlds is a launcher for independent Skyrim multiplayer servers. Find a server, inspect its details and connect. The launcher verifies and downloads the mod and client packages supplied by that server before starting the game.
 
-### 🗺️ Roadmap
+### Getting started
 
-Detaillierte Roadmap: [ROADMAP.md](ROADMAP.md)
+1. Download the **EXE or portable ZIP** from a GitHub release. Extract the ZIP before use.
+2. Start Steam. In **Settings → Game**, select and verify your Skyrim Special Edition folder.
+3. Search under **Discover servers**, open the server details and select **Connect**.
 
-### 🤝 Mitwirken
+Windows x64 with Microsoft Edge WebView2 Runtime, Steam and a server-supported Skyrim version are required. A complete server client package supplies matching SKSE and Address Library files, so no manual SKSE installation is needed in that case. The server must actually provide a suitable package; the launcher executable does not contain the game runtime.
 
-Wir suchen Unterstützung in folgenden Bereichen:
-- **C++ Entwickler** – Arbeit am SKSE-Plugin und Memory-Injection
-- **Frontend-Entwickler** – React/TypeScript und idealerweise Rust (Tauri)
-- **Backend-Entwickler** – Aufbau einer hochverfügbaren Master-Server-API
+The splash shows verification, downloads and startup. It closes automatically after the real Skyrim process is detected, without bringing the launcher to the foreground. Startup errors remain visible.
 
----
+### Included in 0.2.0
 
-## 🇬🇧 English
+- Server search, filters, sorting, favorites, history and detail pages.
+- Country flags, public server artwork, player counts and online/offline status.
+- Verified mod/client downloads, a cache and the server's mod load order.
+- Original-file backups, restoration and protection of externally modified files.
+- Steam authentication and an optional player name alongside the verified Steam ID.
+- German, English and Russian; streamer privacy, optional ambient audio and Discord activity.
+- Game-process monitoring and crash reports with preview, local export and optional upload. Memory dumps require separate consent.
 
-> **NOTICE: WORK IN PROGRESS (WIP)**
-> A local 0.2.0 preview with server browsing, verified mod/client-package preparation and a PHP master has been built and checked. Full Skyrim/CEF gameplay acceptance and public deployment remain open. Contributions and testing are welcome.
+Other game servers can be added through **Direct connection**. The registry URL is fixed; the game-server destination is selected per connection.
 
-### 🌟 The Vision
+[Connection guide](docs/CONNECTING.md) · [Settings](docs/LAUNCHER_SETTINGS.md) · [Steam and approval](docs/STEAM_AUTHENTICATION.md) · [Release guide](docs/RELEASING.md) · [Server operator handbook](docs/SERVER_OWNER_GUIDE.en.md)
 
-SkyMP is an impressive technical achievement. However, to unlock its full potential – similar to **FiveM** or **RedM** – we need an infrastructure that allows decentralization.
+GitHub release assets are only the EXE, portable ZIP and `SHA256SUMS` from the release's `upload/` directory. Game-server, website and native runtime packages are separate.
 
-The goal of this project is to create a **universal launcher** and a **master server infrastructure**. Moving away from hard-coded server IPs, towards a living community server list where anyone can host and advertise their own Skyrim server.
+## Русский
 
-### 🏗️ System Architecture
+SkyMP Worlds — лаунчер для независимых многопользовательских серверов Skyrim. Найдите сервер, откройте его описание и подключитесь. Перед запуском лаунчер проверит и загрузит предоставленные сервером моды и клиентские файлы.
 
-Four core components working together:
+### Начало работы
 
-| Component | Technology | Responsibility |
-|---|---|---|
-| Client Plugin | C++ / SKSE | Reads connection target dynamically from `Data/Platform/Plugins/skymp5-client-settings.txt` |
-| Launcher (Frontend) | Tauri + React/TS | Server browser, settings management, game launch |
-| Master Server (Backend) | PHP / MySQL | Registry API for heartbeats & server list (runs on `api.skymp-worlds.net`) |
-| Dedicated Server | C++ (SkyMP) | Sends heartbeat, registers itself automatically |
+1. Скачайте **EXE или portable ZIP** из релиза GitHub. ZIP необходимо распаковать.
+2. Запустите Steam. В **Настройки → Игра** выберите и проверьте папку Skyrim Special Edition.
+3. Найдите сервер, откройте его страницу и нажмите **Подключиться**.
 
-**API Exchange:** The central platform for communication between launcher, servers, and master server is [https://skymp-worlds.net/](https://skymp-worlds.net/) (and its subdomains).
+Нужны Windows x64 с Microsoft Edge WebView2 Runtime, Steam и поддерживаемая сервером версия Skyrim. Полный пакет клиента включает подходящие SKSE и Address Library; в этом случае устанавливать SKSE вручную не нужно. Сервер должен предоставить такой пакет. В EXE лаунчера игровая среда не встроена.
 
-### 🗺️ Roadmap
+Экран подключения показывает проверку файлов, загрузку и запуск. Он закрывается автоматически после обнаружения процесса Skyrim и не переводит фокус на лаунчер. При ошибке запуска сообщение остаётся открытым.
 
-See detailed roadmap: [ROADMAP.md](ROADMAP.md)
+### Возможности 0.2.0
 
-### 🤝 Contributing
+- Поиск, фильтры, сортировка, избранное, история и страницы серверов.
+- Флаги стран, изображения серверов, число игроков и статус онлайн/офлайн.
+- Проверка размера и SHA-256, кеш загрузок и порядок модов, заданный сервером.
+- Резервное копирование, восстановление и защита файлов, изменённых вне лаунчера.
+- Авторизация Steam и имя игрока в дополнение к подтверждённому Steam ID.
+- Немецкий, английский и русский языки; режим стримера, необязательный фоновый звук и активность Discord.
+- Наблюдение за процессом игры и отчёты о сбоях с просмотром, локальным экспортом и необязательной отправкой. Дампы памяти требуют отдельного согласия.
 
-We are looking for help in the following areas:
-- **C++ Developers** – Work on the SKSE plugin and memory injection
-- **Frontend Developers** – Experience with React/TypeScript and ideally Rust (Tauri)
-- **Backend Developers** – Building a highly available master server API
+Другие серверы можно добавить через **Прямое подключение**. Адрес общего списка фиксирован; игровой сервер выбирается для каждого подключения.
 
-### 📁 Repository Structure
+[Настройки](docs/LAUNCHER_SETTINGS.md) · [Steam и допуск](docs/STEAM_AUTHENTICATION.md) · [Публикация релиза](docs/RELEASING.md) · [Руководство владельца сервера](docs/SERVER_OWNER_GUIDE.ru.md)
 
-```
-skymp-client-launcher/
-├── launcher/           # Tauri + React desktop app (server browser)
-│   ├── src/            # React/TypeScript frontend
-│   └── src-tauri/      # Rust backend (Tauri)
-├── web/
-│   ├── landing-page/   # Multi-language landing page (HTML/CSS/JS)
-│   └── api.skymp-worlds.net/ # PHP/MySQL registry API
-│       ├── heartbeat.php   # Heartbeat ingest / upsert
-│       ├── list.php        # Public server list
-│       ├── servers.sql     # Registry schema
-│       └── api/servers/    # Compatibility endpoint (/api/servers)
-├── docs/               # Architecture diagrams & additional docs
-└── ROADMAP.md          # Detailed phased roadmap
-```
+Для релиза GitHub загружаются только EXE, portable ZIP и `SHA256SUMS` из папки `upload/`. Игровой сервер, сайты и нативный клиент публикуются отдельно.
 
----
+## Project and documentation
 
-## 🇷🇺 Русский
+| Area | Entry point |
+| --- | --- |
+| Current implementation and validation | [Status](docs/STATUS.md), [Roadmap](ROADMAP.md) |
+| Build and contribute | [Development](docs/DEVELOPMENT.md), [Contributing](CONTRIBUTING.md) |
+| Releases and upload contents | [Manual releases](docs/RELEASING.md), [Changelog](CHANGELOG.md) |
+| Server integration | [DE](docs/SERVER_OWNER_GUIDE.de.md), [EN](docs/SERVER_OWNER_GUIDE.en.md), [RU](docs/SERVER_OWNER_GUIDE.ru.md) |
+| Mod and runtime contracts | [Mod API](docs/MODPACK_PROTOCOL.md), [Runtime catalogs](docs/RUNTIME_UPDATES.md) |
+| Hosting and developer portal | [PHP hosting](docs/PHP_HOSTING.md), [DEV: DE](docs/DEV_PORTAL_SETUP.de.md), [EN](docs/DEV_PORTAL_SETUP.en.md), [RU](docs/DEV_PORTAL_SETUP.ru.md) |
+| Component boundaries | [Architecture](docs/ARCHITECTURE.md) |
 
-> **ВНИМАНИЕ: В РАЗРАБОТКЕ (WIP)**
-> Локальная preview-версия 0.2.0 с браузером серверов, проверенной подготовкой модов/клиента и PHP-мастером собрана и проверена. Полная проверка Skyrim/CEF в игре и публичное развёртывание ещё не завершены. Приглашаем участников и тестировщиков.
+The desktop application is in `launcher/`. The native game client and game server are maintained in the separate [SkyMP fork](https://github.com/RealHartlMax/skymp). `web/` contains the local PHP/static website sources; it is currently ignored by Git. A fresh source checkout therefore needs the shared build assets described in the [development guide](docs/DEVELOPMENT.md).
 
-### 🌟 Видение
+Documentation reviewed **26 October 2026**. The Windows release build and 69 active Rust tests passed; three separate integration tests were excluded. A user confirmed successful game startup and walking with the prepared native runtime. This does not certify every server, mod pack or game version. See [validation scope](docs/STATUS.md).
 
-SkyMP – это впечатляющее техническое достижение. Однако, чтобы раскрыть его полный потенциал – подобно **FiveM** или **RedM** – нам необходима инфраструктура, допускающая децентрализацию.
-
-Цель этого проекта – создать **универсальный лаунчер** и **инфраструктуру мастер-сервера**. Отказаться от жёстко заданного IP-адреса сервера в пользу живого списка серверов сообщества, где каждый сможет размещать и продвигать собственный сервер Skyrim.
-
-### 🏗️ Архитектура системы
-
-Четыре ключевых компонента работают вместе:
-
-| Компонент | Технология | Задача |
-|---|---|---|
-| Клиентский плагин | C++ / SKSE | Читает цель подключения динамически из `Data/Platform/Plugins/skymp5-client-settings.txt` |
-| Лаунчер (фронтенд) | Tauri + React/TS | Браузер серверов, настройки, запуск игры |
-| Мастер-сервер (бэкенд) | PHP / MySQL | Registry API для хартбитов и списка серверов (работает на `api.skymp-worlds.net`) |
-| Игровой сервер | C++ (SkyMP) | Отправляет хартбит, автоматически регистрируется |
-
-**API-обмен:** Центральная платформа для обмена между лаунчером, серверами и мастер-сервером — это [https://skymp-worlds.net/](https://skymp-worlds.net/) (и её поддомены).
-
-### 🗺️ Дорожная карта
-
-Подробная дорожная карта: [ROADMAP.md](ROADMAP.md)
-
-### 🤝 Как помочь проекту
-
-Мы ищем помощь в следующих направлениях:
-- **C++ разработчики** – работа над SKSE-плагином и внедрением в память
-- **Frontend-разработчики** – опыт с React/TypeScript и желательно Rust (Tauri)
-- **Backend-разработчики** – построение высокодоступного API мастер-сервера
-
----
-
-## 🔗 Resources / Ressourcen / Ресурсы
-
-- [SkyMP Server Source](https://github.com/RealHartlMax/skymp)
-- [SKSE64 Source](https://github.com/ianpatt/skse64)
-- [FiveM Source (Inspiration)](https://github.com/citizenfx/fivem)
-## PHP hosting and online accounts
-
-See [PHP hosting with independent subdomains](docs/PHP_HOSTING.md) for the five
-separate upload archives, shared CSS, existing dashboard accounts and native server
-authentication. No Node service is required on the PHP webspace. Run
-`node tests/php-master-smoke.mjs` for isolated local HTTP tests. The optional Node
-reference preview is described in [local setup](docs/LOCAL_AND_LIVE.md).
-No demo accounts are created. These commands do not deploy or publish anything.
+Project license: [GPL-3.0](LICENSE). Community: [Discord](https://discord.gg/NSXtNNbjuR).

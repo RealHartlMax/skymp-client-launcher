@@ -1,6 +1,8 @@
 # Absturzberichte für Launcher und Spiel
 
-Stand: 25.10.2026. **Lokal implementiert; nicht veröffentlicht.**
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
+Im Launcher 0.2.0 implementiert; der PHP-Reportdienst wird separat eingerichtet und veröffentlicht.
 Die Prozessüberwachung in `launcher/src-tauri/src/game_session.rs` liefert
 Spiel-PID, Laufzeit, Operation-ID und Windows-Exitcode. `crash_reports.rs` sammelt
 und verwaltet die Berichte, `crash_capture.rs` enthält den optionalen separaten
@@ -187,3 +189,15 @@ beendeten Prozess konstruiert.
 Quellen: [Microsoft: MiniDumpWriteDump](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump),
 [Microsoft: Minidump-Dateien und Symbole](https://learn.microsoft.com/en-us/windows/win32/debug/minidump-files),
 [PHP: Upload-Limits](https://www.php.net/manual/en/ini.core.php#ini.upload-max-filesize).
+
+## Aktueller Release und native Runtime
+
+Launcher 0.2.0 enthält den Dialog, Export und optionalen Versand, nicht die native Spiel-DLL. Der aktuelle native Client wurde separat korrigiert; der Nutzer bestätigt Start und Bewegung mit dem bereitgestellten Paket. Neue Fehler sind trotzdem nach Build-ID, Modul, Offset und passendem Symbolstand zu beurteilen. Die Diagnose sollte nicht pauschal einen schon behobenen Threadpool-Fehler unterstellen.
+
+Bei einem normalen Spielende wird kein Crashdialog als Fehler angezeigt. Nach erfolgreicher Startbestätigung verschwindet der Verbindungs-Splashscreen automatisch; die Prozessüberwachung und Crashreport-Erfassung laufen weiter. Ohne eingerichteten Upload bleibt der lokale Export nutzbar.
+
+Lokale Exporte liegen unter `%APPDATA%\io.skymp.launcher\logs\crash-reports\exports\`. DEV, API und Verwaltung werden auf dem PHP-Webhosting eingerichtet, nicht auf dem Gameserver-VPS. Die Anleitung für den geschützten DEV-Ordner `reports/` steht in [DE](DEV_PORTAL_SETUP.de.md), [EN](DEV_PORTAL_SETUP.en.md) und [RU](DEV_PORTAL_SETUP.ru.md).
+
+**English:** The launcher provides consent-based reports and local export. Native game DLL fixes are separate runtime releases. The automatic splash dismissal does not stop crash monitoring. DEV/API/MANAGE are hosted on PHP webhosting, with protected report storage.
+
+**Русский:** Лаунчер предоставляет отчёты с согласием и локальный экспорт. Исправления игровых DLL публикуются отдельной средой runtime. Автоматическое закрытие экрана подключения не отключает наблюдение за сбоями. DEV/API/MANAGE работают на PHP-хостинге с защищённым хранилищем отчётов.

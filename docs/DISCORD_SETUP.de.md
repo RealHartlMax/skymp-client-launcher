@@ -1,5 +1,7 @@
 # Discord für SkyMP Worlds
 
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
 Der Launcher nutzt die öffentliche Application-ID `1496895150322876555` für den optionalen Aktivitätsstatus der Discord-Desktop-App. Dafür wird kein OAuth-Link, Bot-Token oder Client-Secret im Launcher benötigt. Einstellungen → Spiel → Discord-Aktivitätsstatus: Anzeigen, Details verbergen oder Deaktiviert. Standard: deaktiviert. Streamer-Modus verbirgt Serverdetails auch bei eingeschaltetem Status.
 
 ## Web-Anmeldung und Kontoverknüpfung
@@ -16,3 +18,5 @@ Gleiche E-Mail-Adressen führen **nicht automatisch** zur Verknüpfung. Das verh
 JSON-Speicherung verwendet dieselbe geschützte Kontendatei. Bei MySQL wird die zusätzliche Tabelle `manage_oauth_accounts` bei erster Verwendung angelegt. Falls der Datenbankbenutzer keine CREATE-Berechtigung hat, ausschließlich den gleichnamigen `CREATE TABLE IF NOT EXISTS`-Abschnitt aus `storage/mysql-schema.sql` importieren. Keine vorhandenen Tabellen oder Konten ersetzen. PHP benötigt ausgehendes HTTPS mit gültiger CA-Konfiguration, vorzugsweise cURL, alternativ HTTPS-Streams.
 
 Lokal geprüft: Zustandsablauf, Tokenaustausch mit simuliertem Discord, Kontoerstellung/Verknüpfung, E-Mail-Konflikte, CSRF und drei Sprachen. Die echte Discord-Freigabe und eine produktive MySQL-Verbindung sind nach Einrichtung des privaten Secrets zu prüfen.
+
+Die Einrichtung betrifft PHP-Webhosting bzw. die genannten Launcher-Einstellungen. Launcher-, Server- und native Runtime-Pakete bleiben getrennt. [Dokumentationsübersicht](README.md) · [Launcher-Release](RELEASING.md).

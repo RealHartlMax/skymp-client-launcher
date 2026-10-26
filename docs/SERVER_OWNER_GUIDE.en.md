@@ -1,12 +1,18 @@
 # Server operator handbook
 
+<a id="compatibility"></a>
+
 ## Scope & compatibility {#compatibility}
 
-This handbook describes the shared SkyMP Worlds launcher **0.2.0** and the interfaces checked on **2026-10-22**. You can extend an existing compatible SkyMP server or use the [RealHartlMax/SkyMP fork](https://github.com/RealHartlMax/skymp) as a starting point. Registering with the launcher does not automatically migrate player data or the game world.
+Documentation reviewed **2026-10-26**, launcher **0.2.0**. Server and runtime versions are validated separately.
+
+This handbook describes the shared SkyMP Worlds launcher **0.2.0** and the interfaces checked on **2026-10-26**. You can extend an existing compatible SkyMP server or use the [RealHartlMax/SkyMP fork](https://github.com/RealHartlMax/skymp) as a starting point. Registering with the launcher does not automatically migrate player data or the game world.
 
 **There is no compatibility guarantee.** A server listing, a successfully loaded manifest or a successful build does not prove that a game session works. The game protocol, server, native client, Skyrim version, SKSE, Address Library, mods and load order must match. Adding HTTP routes does not make another multiplayer mod compatible with SkyMP.
 
 Test changes on a separate installation first. Back up server settings, world data, accounts and keys before switching. Examples contain recognizable placeholders; file sizes, CRC32 and SHA-256 must be generated from your actual files.
+
+<a id="architecture"></a>
 
 ## How the services work together {#architecture}
 
@@ -20,6 +26,8 @@ Test changes on a separate installation first. Back up server settings, world da
 | Client catalog | Full URL to `catalog.json` | Select a matching native client / SKSE combination |
 
 The game address, file server and master are separate destinations. `resourceUrl` is the file server base, not the URL of its manifest route. In contrast, `runtimeSource` is a full catalog or client manifest URL. The launcher prepares files and then starts the SKSE loader from the selected game directory.
+
+<a id="fork"></a>
 
 ## Route A: Use the linked fork {#fork}
 
@@ -38,6 +46,8 @@ cd skymp-server-source
 
 Cloning does not build or start the server. The launcher extension mainly involves `skymp5-server/ts/launcherResources.ts`, its registration in `ui.ts`, and the master / login systems. The published mod routes were compared with the local source; this does not validate your own binaries. Local unpublished client changes do not become available simply by linking the repository.
 
+<a id="existing"></a>
+
 ## Route B: Integrate an existing server {#existing}
 
 Extend your current server deliberately. The shared launcher changes neither your gamemode logic nor your database format. A different implementation may need additional adjustments.
@@ -55,7 +65,11 @@ The fork implements modern mod delivery as a separate resource component with ex
 
 An existing server can still be opened through **Direct connection** for initial tests. Public name search additionally requires registration and a valid heartbeat. A public listing does not confirm technical compatibility.
 
+<a id="registration"></a>
+
 ## Account, listing & public identity {#registration}
+
+Set the server name and maximum player count only in the game-server admin panel; authenticated heartbeats publish them to the central website. Recommended images: **512 × 512** or **1024 × 1024** for the logo and **3072 × 512** (6:1) for the banner, as PNG files beside `server-settings.json`.
 
 1. Create a regular account in the [operator dashboard](https://manage.skymp-worlds.net/) and confirm your email address if required. Demo accounts are not used for game logins.
 2. Add your server with a public host and UDP game port. Set its name and player limit only on the game server; the website receives them by heartbeat. Select status `active` when the entry should be publicly available.
@@ -71,6 +85,16 @@ An existing server can still be opened through **Direct connection** for initial
 | Login token / game session | Private | Time-limited user or server authentication |
 
 Never publish the private heartbeat key as a description, tag or download. It does not belong in the player's launcher profile. Rotate keys through the dashboard, then update the private server settings and restart the server.
+
+### Server name, player limit and availability
+
+Set the server name and maximum player count only in the game server admin panel. The website displays authenticated heartbeat values read-only and no longer sends a synthetic heartbeat when saving a registration. A server appears in the public list after its first complete authenticated heartbeat.
+
+Each heartbeat includes `name`, `maxPlayers` and the current player count in `online`. The optional `serverStatus` field is `online` or `offline`; the current fork reports offline during a graceful shutdown. After **5 minutes** without a heartbeat, a known server is also offline. The public list exposes `server_status` and `last_heartbeat`. Known offline servers remain visible, with joining disabled, and become available after their next online heartbeat. Visible launcher and web server lists refresh every 30 seconds.
+
+Availability is independent of `offlineMode`, which controls game authentication. Save server name/limit changes and restart the game server when required.
+
+<a id="configuration"></a>
 
 ## Extend your existing server settings {#configuration}
 
@@ -104,7 +128,11 @@ The fork resolves `launcherResources.directory` relative to the server process w
 
 The catalog on the update domain must actually be uploaded and suitable for your client / server combination. Its URL is not a promise of support for every Skyrim version. You can provide your own complete `catalog.json` instead. Keep the server manifest and dashboard consistent; changes to download settings require a new heartbeat.
 
+<a id="network"></a>
+
 ## Connectivity, TLS & reverse proxies {#network}
+
+The current Steam flow resolves `/api/launcher/auth-policy` and `/api/launcher/auth/steam` against the resource host root. If file delivery uses a prefix such as `/realm/`, also proxy those two authentication routes at the host root. A dedicated file-server subdomain without a path prefix avoids this special routing requirement.
 
 | Connection | Typical access | Check |
 | --- | --- | --- |
@@ -119,7 +147,11 @@ For a proxy, use the final public base URL, for example `https://files.example.o
 
 Download / catalog URLs must contain no credentials, query parameters or fragments. The public PHP master rejects private, loopback and link-local destinations, including DNS resolutions to them. `127.0.0.1` refers to the player's own computer from their perspective. Use a direct local connection during development; do not publish internal addresses in the production profile. Launcher file requests run in the Rust backend and need no browser CORS permission.
 
+<a id="resources"></a>
+
 ## Publish mods, assets & load order {#resources}
+
+In **Resources**, rescan uploaded plugins, enable the desired entries and arrange them with the arrows. New uploads remain disabled initially. **Save load order** changes only `loadOrder` in the existing server configuration. Restart the game server afterwards. The file layout and contract below still apply; this normal workflow does not require copying JSON manually.
 
 ```text
 server-settings.json
@@ -151,6 +183,8 @@ All additional `.esm`, `.esp` and `.esl` plugins must appear in the actual serve
 Native DLLs and JavaScript belong in the separate client package. Protected platform / authentication files, Bethesda masters and Creation Club files are not offered as mod downloads. Path traversal, symlinks / junctions, Windows device names, colons, trailing dots / spaces and destination paths differing only by letter case are rejected. The new mod API limits destination paths to 240 UTF-8 bytes.
 
 ZIP / 7z / FOMOD packages are not unpacked or interactively installed on the player's computer. Prepare the required mod selection yourself and publish only the required files intended for redistribution. Skyrim / DLC files must come from the player's matching installation.
+
+<a id="manifest"></a>
 
 ## Manifest v2: Contract for custom implementations {#manifest}
 
@@ -197,6 +231,8 @@ A generator must validate approved source roots, reject links, normalize destina
 
 Current limits: at most **10,000 mod files**, **8 GiB per file**, **64 GiB per mod package**; the launcher limits JSON manifests to **8 MiB**. A custom implementation must enforce matching limits and protected destination paths.
 
+<a id="downloads"></a>
+
 ## Download endpoints & HTTP responses {#downloads}
 
 `GET` or `HEAD <resourceUrl>/api/launcher/files/<id>` must serve the file announced in the manifest. A resource ID identifies an approved file; never interpret it as an arbitrary filesystem path. A separate file host is possible if the manifest and all relative routes remain accessible under its base.
@@ -213,6 +249,8 @@ Current limits: at most **10,000 mod files**, **8 GiB per file**, **64 GiB per m
 | `503` | Incomplete, unreadable or inconsistent publication |
 
 The fork also sends `X-Resource-Hash`, `ETag` and `Accept-Ranges: bytes`. Immutable file IDs may be cached long term; the manifest must stay current. The launcher checks downloaded data against size and SHA-256 independently of HTTP headers. It requires complete downloads; HTTP range support does not promise that this launcher version resumes interrupted downloads.
+
+<a id="legacy"></a>
 
 ## Older servers: Legacy contract {#legacy}
 
@@ -231,6 +269,8 @@ The older resource contract uses `version: "1"`, flat filenames and downloads th
 ```
 
 Without a resource API, this only works when every required file is already present locally and matches the published size / CRC32. It does not repair an old blanket `.esm` restriction or a missing download for custom plugins. Use v2 for new integrations and structured mod packages.
+
+<a id="runtime"></a>
 
 ## Publish the client, SKSE & Address Library {#runtime}
 
@@ -289,7 +329,20 @@ The usual destinations are relative to the game directory: `Data/Platform/Plugin
 
 If both the server manifest and selected profile omit `runtimeSource`, the launcher can only use already installed client files; no automatic client update is being offered. Changes to offered client files are detected from the manifest and file hashes during the next preparation. Only missing or different files need downloading. Private authentication state and generated connection settings are excluded from client packages.
 
+<a id="authentication"></a>
+
 ## Online authentication & session contract {#authentication}
+
+Normal player access uses **Steam**. The launcher reads the game-server policy, obtains a ticket for the exact supplied service identity and submits it for verification. The server decides approval/whitelist status. An additional SkyMP web account is required only when the response requests `accountLoginRequired`. The `guest` mode means access without that additional web account; it does not disable Steam verification.
+
+| On the game server | Purpose |
+| --- | --- |
+| `GET /api/launcher/auth-policy` | Steam/access policy and ticket service identity |
+| `POST /api/launcher/auth/steam` | Verify the Steam ticket and optional display name |
+
+Approve pending requests under **Whitelist / player access** in the game-server admin panel. A connected actor is not required before approval. Steam ID, display name and character mapping stay separate. The splash closes after confirmed process startup; this does not confirm completed world loading.
+
+### Master and optional legacy account login
 
 The central platform uses regular dashboard accounts, explicit game consent and server-bound sessions. `offlineMode` must match between the server and connection profile. Changing only the launcher to offline does not change server authentication.
 
@@ -308,6 +361,8 @@ The central platform uses regular dashboard accounts, explicit game consent and 
 A session applies only to its intended server and current private key. Expiry, dashboard logout and key rotation can invalidate sessions. The server must reject invalid sessions. A new master must not reassign existing numeric game identities without a planned data migration.
 
 The historical route name `login-discord` means **no automatically configured Discord OAuth or guild checks** on this PHP master. Additional Discord role / guild rules need a suitable real provider integration. The public community invitation is not an authentication provider. A separate compatible master can be configured for direct connections; a centrally registered server uses the master settings published in its central listing.
+
+<a id="validation"></a>
 
 ## Validate before players join {#validation}
 
@@ -340,6 +395,8 @@ The launcher validates hashes and versions before activation. A wrong hash, unav
 
 Only now perform a real Skyrim / SKSE test with the intended version: startup, browser login and consent, session validation, UDP connection, shared world and reconnection. Check additional native plugins separately. Passing file or API checks does not replace this test. Record the actual server / client revision and mod package tested before offering it to players.
 
+<a id="operations"></a>
+
 ## Updates, rollback & restoration {#operations}
 
 Publish new mod and client files as a coherent release. Keep load order, server data and client resources synchronized. For client updates, create new immutable package paths, upload all files and switch the catalog last. A catalog change does not replace a necessary server restart after plugin changes.
@@ -349,6 +406,8 @@ Launcher caches are separated by server target. Originals and the activation jou
 Back up world data and server settings independently of the launcher before updates. The central PHP platform operator must preserve account storage and private authentication storage together with identity mappings and keys. Rolling back the client catalog changes only the offered client files; it does not automatically roll back a server / world data migration.
 
 For a blocked or compromised server identity, rotate keys, update private settings and restart heartbeats. Support requests need only the public ID, timestamp, launcher / client / Skyrim versions and sanitized errors. Passwords, private master keys and sessions do not belong in Discord posts.
+
+<a id="troubleshooting"></a>
 
 ## Troubleshoot specific failures {#troubleshooting}
 
@@ -370,9 +429,15 @@ For a blocked or compromised server identity, rotate keys, update private settin
 
 For help, use the [SkyMP Worlds Discord](https://discord.gg/NSXtNNbjuR). Resolving one loading failure does not prove that every other native plugin supports the game version.
 
+### Restore a missing gamemode.js
+
+`ENOENT ... gamemode.js` refers to a file missing on the VPS. Restore your own gamemode from backup, or set its existing path in **CFG editor → General → Server gamemode file**, save and restart the game server. Paths are absolute or relative to the server working directory. A standard gamemode supplied in a server package is intended only for an unmodified default server; restore custom gamemodes from your own backup. The watcher retains an already loaded gamemode during a temporary file gap and reloads it after restoration.
+
+<a id="sources"></a>
+
 ## Sources, revision & responsibility {#sources}
 
-This handbook was checked against launcher **0.2.0**, the local server source based on commit `a037003d57890b26ed21936ac2432c987aced878`, and the published resource implementation in the linked fork. Updated **2026-10-22**. Later commits, local extensions and other forks may differ. The combination present in the prepared client catalog is not a promise of support for other game versions; each release still requires a full gameplay test.
+This handbook was reviewed on **2026-10-26** against launcher **0.2.0** and its documented interfaces. The Windows launcher builds, with 69 active Rust tests passing and three integration checks excluded. The user confirmed startup and movement with the separately supplied native runtime. This does not qualify other server, game or mod versions. The linked server fork evolves independently; an earlier fixed commit reference cannot guarantee later builds.
 
 - [Server fork and source](https://github.com/RealHartlMax/skymp)
 - [Mod manifest and file routes in the fork](https://github.com/RealHartlMax/skymp/blob/main/skymp5-server/ts/launcherResources.ts)
@@ -383,17 +448,7 @@ This handbook was checked against launcher **0.2.0**, the local server source ba
 
 This web area is static and needs no Node process or database on the host. It does not automatically deploy the main site, dashboard, master, file host or game server. Each operator remains responsible for their tested server / client combination. **No guarantee is given for integration with existing servers or arbitrary mod packages.**
 
-### Server name, player limit and offline status (2026-10-24)
-
-Set the server name and maximum player count only in the game server admin panel. The website displays authenticated heartbeat values read-only and no longer sends a synthetic heartbeat when saving a registration. A server appears in the public list after its first complete authenticated heartbeat.
-
-Each heartbeat includes `name`, `maxPlayers` and the current player count in `online`. The optional `serverStatus` field is `online` or `offline`; the current fork reports offline during a graceful shutdown. After **5 minutes** without a heartbeat, a known server is also offline. The public list exposes `server_status` and `last_heartbeat`. Known offline servers remain visible, with joining disabled, and become available after their next online heartbeat. Visible launcher and web server lists refresh every 30 seconds.
-
-Availability is independent of `offlineMode`, which controls game authentication. Save server name/limit changes and restart the game server when required.
-
-### Restore a missing gamemode.js
-
-`ENOENT ... gamemode.js` refers to a file missing on the VPS. Restore your own gamemode from backup, or set its existing path in **CFG editor → General → Server gamemode file**, save and restart the game server. Paths are absolute or relative to the server working directory. The r4 server archive includes a standard `gamemode.js`, suitable only for an unmodified default server; it must not replace a custom gamemode. The new watcher retains the last loaded mode during a temporary file gap and resumes loading when the file returns.
+<a id="resources-player-name"></a>
 
 ## Dashboard resources and player names {#resources-player-name}
 
@@ -404,3 +459,9 @@ Save load order changes only loadOrder in the existing configuration. Restart th
 The launcher sends a player display name alongside the verified Steam ID. Approval/Whitelist and the player view show it. Display and RP character names remain separate; renaming does not change identity, approval or profile. The matching new server source is required.
 
 Optional Discord web sign-in is configured on PHP hosting with a private client secret. Existing password users explicitly link Discord after signing in at https://manage.skymp-worlds.net/account.php . Launcher activity status only needs the public App ID and desktop Discord, without web OAuth. This does not add Discord guild or role checks.
+
+### Player profiles and verified identifiers
+
+The player profile displays the game-server-verified Steam ID separately and read-only. Manual identifiers and internal notes remain editable and cannot replace that identity. A newly connected player must have a profile even when the player list has only been updated over WebSocket.
+
+The previous profile 404 shown as a generic API connection error is fixed in the game server: update both JavaScript backends and the dashboard frontend, restart the entire service including the dashboard, and hard-refresh the browser. Preserve player/configuration data. Rebuilding the launcher does not replace those files.

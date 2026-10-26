@@ -1,5 +1,7 @@
 # SkyMP Worlds Auth Master
 
+Documentation reviewed **2026-10-26**, launcher **0.2.0**.
+
 This is the optional Node reference implementation. The current PHP-only hosting uses
 the existing dashboard accounts through the [PHP master](../docs/PHP_HOSTING.md).
 No Node service is required there. These Node reference accounts are separate and
@@ -23,3 +25,5 @@ configuration, supported routes, protocol compatibility and packaging.
 The legacy `login-discord` route name is retained for wire compatibility; this
 master uses username/password accounts. Discord OAuth and guild verification are
 not configured by this service.
+
+For the Windows launcher itself, use the [development guide](../docs/DEVELOPMENT.md) and [manual release guide](../docs/RELEASING.md). Starting this Node reference is not a prerequisite for compiling or distributing the portable EXE. The Steam game-server policy is described in [Steam authentication](../docs/STEAM_AUTHENTICATION.md).

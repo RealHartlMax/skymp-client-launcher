@@ -1,6 +1,8 @@
 # Spielerzugang, Steam und Legacy-Anmeldung
 
-Stand: 24. Oktober 2026, Protokollbasis r5/r6 mit korrigierter Steam-Dienstkennung. Server, Desktop-Launcher und
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
+Beschrieben ist der Steam-Zugang mit servergebundener Dienstkennung. Server, Desktop-Launcher und
 `skymp5-client.js` müssen gemeinsam aktualisiert werden. Die Serverarchive
 enthalten keine Launcher-EXE und kein vollständiges natives Clientpaket.
 
@@ -75,7 +77,7 @@ automatisch die Registrierung für die globale Serverliste.
    der Login-Dienst die Konfiguration einliest. Dashboard und Bot bleiben aktiv.
 4. Aktualisierte Launcher-EXE und versionsgebundenes Clientpaket bereitstellen.
    Im Launcher muss Steam laufen und angemeldet sein.
-5. Bei Freigabemodus unter **Zugriff & Discord → Steam-Spieler** freigeben.
+5. Bei Freigabemodus unter **Whitelist / Spielerzugang** freigeben.
    Die wartende Spielsitzung fragt den Status zehn Minuten lang ab; danach über
    den Launcher erneut verbinden. Eine Sperre verhindert weitere Anmeldungen.
    Eine laufende Sitzung bei Bedarf zusätzlich über Spieler/Kick beenden.
@@ -111,14 +113,11 @@ weiterhin ihr bisheriges Protokoll verwenden.
 - Das Spiel übergibt `loginWithSteam` und erst auf Aufforderung die vorhandene
   Master-Sitzung. Ein zweiter gleichzeitiger Steam-Login wird abgewiesen.
 
-Lokal wurde ein echtes Steam-Ticket mit der unveränderten Spiel-DLL angefordert
-und freigegeben, ohne Skyrim zu starten. Serverprüfungen verwenden simulierte
-Valve-Antworten. Eine echte Valve-Validierung mit Betreiber-Key sowie Skyrim/CEF,
-Kontozugang, Discord und Multiplayer bleiben gesonderte Abnahmeschritte.
+Eine frühere separate Probe hat ein echtes Steam-Ticket über die unveränderte Spiel-DLL angefordert, ohne Skyrim zu starten. Die automatisierten Serverprüfungen verwenden simulierte Valve-Antworten. Danach hat der Nutzer einen erfolgreichen Spielstart und Bewegung mit der bereitgestellten Runtime bestätigt. Eine vollständige Abnahme weiterer Konto-, Discord- und Mehrspielermodi wird daraus nicht abgeleitet.
 
 ## English
 
-Steam is mandatory for every r5 login mode. The updated Windows launcher requests
+Steam is required in the current fork’s documented access modes. The updated Windows launcher requests
 a Web API ticket through the existing Skyrim Steam DLL and the running Steam
 client. The server validates it with Valve using its private Steam Web API key.
 The game DLL is not replaced. A client-supplied Steam ID alone is never trusted.
@@ -140,13 +139,11 @@ game session per Steam ID is allowed on a server instance. A master account is
 bound to its verified Steam identity. Blocking prevents future login; kick an
 already connected player separately. Pending guests poll for ten minutes.
 
-The native ticket request passed locally without starting Skyrim or replacing
-its Steam DLL. Server validation uses simulated Valve responses; real API-key
-validation, Skyrim/CEF and multiplayer acceptance remain open.
+An earlier native ticket probe passed without starting Skyrim or replacing its Steam DLL. Automated server checks use simulated Valve responses. The user subsequently confirmed game startup and movement with the supplied runtime. Additional account, Discord and multiplayer modes still need their own acceptance.
 
 ## Русский
 
-Steam обязателен для любого входа на сервер r5. Обновлённый Windows-лаунчер
+Steam обязателен в документированных режимах доступа текущего форка. Обновлённый Windows-лаунчер
 получает Web API билет через существующую Steam DLL Skyrim и запущенный Steam.
 Сервер проверяет билет у Valve своим закрытым Steam Web API Key. DLL игры не
 заменяется. Переданного клиентом SteamID без проверки недостаточно.
@@ -169,9 +166,7 @@ Worlds/skymp.net не нужен; вход в Steam нужен во всех р�
 запрещает последующие входы; уже подключённого игрока отключают отдельно.
 Ожидающий одобрения клиент проверяет статус десять минут.
 
-Локально получен настоящий билет без запуска Skyrim и замены Steam DLL.
-Проверки сервера используют имитацию ответов Valve. Настоящая проверка с ключом,
-Skyrim/CEF и многопользовательская сессия пока требуют отдельной проверки.
+Ранее отдельная проверка получила настоящий билет без запуска Skyrim и замены Steam DLL. Автоматизированные проверки сервера используют имитацию ответов Valve. Затем пользователь подтвердил запуск игры и движение с предоставленной средой. Другие режимы аккаунтов, Discord и многопользовательской игры проверяются отдельно.
 
 ## Diagnose einer abgelehnten Steam-Anmeldung / Authentication diagnostics / Диагностика
 
@@ -186,3 +181,11 @@ Skyrim/CEF и многопользовательская сессия пока �
 [Steam Web API authentication](https://partner.steamgames.com/doc/webapi/ISteamUserAuth),
 [GetAuthTicketForWebApi](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthTicketForWebApi),
 [Cfx Steam identity provider](https://github.com/citizenfx/fivem/blob/master/code/components/citizen-server-impl/src/SteamIdentityProvider.cpp).
+
+## Start, Freigabe und Spielerprofil / Startup / Запуск
+
+**Deutsch:** Der Splashscreen schließt sich, sobald der echte Skyrim-Prozess bestätigt wurde. Das ist keine Bestätigung einer geladenen Spielwelt. Ein wartender Steam-Zugang wird unter **Whitelist / Spielerzugang** im Gameserver-Dashboard freigegeben; er muss davor nicht als verbundene Spielfigur erscheinen. Im Spielerprofil wird die serverbestätigte Steam-ID separat schreibgeschützt angezeigt. Manuell gepflegte Kennungen verändern diese Identität nicht. Die Profilkorrektur benötigt passende Server-Backends und Dashboard-Dateien, kein neues Steam-Konto.
+
+**English:** The splash closes after the real Skyrim process is detected, not after verified world loading. Pending Steam access is approved under Whitelist/player access before a connected actor is required. The player profile shows the verified Steam ID read-only; manually entered identifiers cannot replace it. The profile fix belongs to the game-server/dashboard build.
+
+**Русский:** Экран подключения закрывается после обнаружения процесса Skyrim, а не после подтверждённой загрузки мира. Ожидающий допуск Steam подтверждается в Whitelist/доступе игроков до появления подключённого персонажа. Подтверждённый Steam ID в профиле доступен только для чтения; ручные идентификаторы его не заменяют. Исправление профиля относится к сборке сервера и панели.

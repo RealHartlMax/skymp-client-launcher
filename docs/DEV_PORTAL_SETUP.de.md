@@ -1,6 +1,8 @@
 # Entwicklerbereich im PHP-Webhosting einrichten
 
-Stand: 25.10.2026. Anleitung für die Konfiguration nach dem Upload der drei Domain-ZIPs.
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
+Anleitung für die Konfiguration nach dem Upload der drei Domain-ZIPs.
 
 ## Was läuft wo?
 
@@ -168,3 +170,5 @@ Die Webseiten-ZIPs enthalten diese Daten nicht. Auf demselben Webhosting kann DE
 private Report-Verzeichnis weiterverwenden. Analyse mit passenden PDB-Symbolen erfolgt lokal.
 Die hier beschriebenen Konfigurationsschritte wurden lokal geprüft; deine tatsächlichen Hosting-Pfade,
 Zugriffsrechte und HTTPS-/PHP-Einstellungen müssen im Hosting-Panel passend gesetzt werden.
+
+Die Einrichtung betrifft PHP-Webhosting bzw. die genannten Launcher-Einstellungen. Launcher-, Server- und native Runtime-Pakete bleiben getrennt. [Dokumentationsübersicht](README.md) · [Launcher-Release](RELEASING.md).

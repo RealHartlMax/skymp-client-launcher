@@ -1,133 +1,48 @@
-# 🗺️ Roadmap – SkyMP Open Launcher Initiative
+# Roadmap
 
-Status audit: **22 October 2026**. Evidence and remaining acceptance: [STATUS.md](docs/STATUS.md).
+Stand: **26. Oktober 2026**. Die implementierte Launcher-Version ist **0.2.0**. Prüfnachweise und offene Abnahmen stehen in [STATUS.md](docs/STATUS.md); die [Release-Anleitung](docs/RELEASING.md) beschreibt die manuelle Veröffentlichung.
 
-[🇩🇪 Deutsch](#-deutsch) · [🇬🇧 English](#-english) · [🇷🇺 Русский](#-русский)
+## In 0.2.0 umgesetzt
 
-## 🇩🇪 Deutsch
+- [x] Serverbrowser mit Suche, Filtern, Sortierung, Favoriten, Verlauf und Details.
+- [x] Direktverbindung und mehrere gespeicherte Serverprofile.
+- [x] Länderflaggen, vom Server gelieferte Bilder und Online-/Offline-Anzeige.
+- [x] Prüfung des Spielordners und Erkennen der installierten Skyrim-Version.
+- [x] Modmanifest v2, geprüfte Downloads, Cache und serverseitige Mod-Ladereihenfolge.
+- [x] Externe Client-/SKSE-/Address-Library-Pakete und Versionskataloge.
+- [x] Reversibler Serverwechsel, Sicherung und Wiederherstellung von Originaldateien.
+- [x] Steam-Tickets, servergebundene Anmeldung und zusätzlicher Spielername.
+- [x] DE/EN/RU, Streamer-Modus, optionale Hintergrundklänge und Discord-Aktivität.
+- [x] Verbindungs-Splashscreen mit Fortschritt und automatischem Schließen nach erfolgreichem Spielstart.
+- [x] Spielprozessüberwachung, präzisere Fehlermeldungen und zustimmungsbasierte Crashreports.
+- [x] Portable Windows-x64-Ausgabe mit EXE, ZIP, Lizenzen und SHA-256-Prüfsummen.
+- [x] Mehrsprachige Betreiberhandbücher und getrennte Dokumentation der sieben Webroots.
 
-„Implementiert“ beschreibt den genannten lokalen Umfang. Einzeltests und Paketprüfung ersetzen keine echte Spielsitzung oder erfolgreiche Veröffentlichung.
+Die zugehörigen Server-Schnittstellen und die native Spiel-Runtime werden separat entwickelt und veröffentlicht. Eine Launcher-Version ersetzt keinen Server- oder Runtime-Build.
 
-### Phase 1 – Grundlagen
+## Noch abzunehmen
 
-| Aufgabe | Komponente | Status |
-| --- | --- | --- |
-| Zielserver aus der Einstellungsdatei lesen | SkyMP-Client / SkyrimPlatform | ✅ Implementiert; echter Spieltest offen |
-| REST-API für Serverliste und Heartbeat | PHP-Master; optionale Node-Referenz | ✅ Implementiert und lokal geprüft |
-| Beim Join Einstellungen schreiben und SKSE nach Vorbereitung starten | Rust-Launcher | ✅ Implementiert; echter Start offen |
+- [ ] Wiederholte und längere Spielsitzungen mit mehreren Spielern sowie unterschiedlichen Modpaketen dokumentieren.
+- [ ] Reconnect, Serverwechsel und Wiederherstellung mit den tatsächlich veröffentlichten Client-/Serverversionen abnehmen.
+- [ ] Veröffentlichung und Download des manuell bereitgestellten GitHub-Releases bestätigen.
+- [ ] Die produktiven PHP-/Datenbank-/Mail-/Discord- und Reportabläufe nach Updates auf den jeweiligen Hosts prüfen.
 
-### Phase 2 – Launcher & UI
+Der Nutzer hat einen erfolgreichen Spielstart und Bewegung in der Spielwelt bestätigt. Weitere Abnahmen bleiben konkrete Aufgaben; sie werden nicht allein aus bestandenen Build- oder API-Tests abgeleitet.
 
-| Aufgabe | Komponente | Status |
-| --- | --- | --- |
-| Tauri/React-Projekt | Desktop-App | ✅ Gebaut |
-| Serverbrowser, Namenssuche, Favoriten und Verlauf | Frontend | ✅ Implementiert und lokal geprüft |
-| Skyrim-Pfad erkennen/auswählen und prüfen | Launcher | ✅ Implementiert |
-| Download, Prüfsummen, Cache und Wiederherstellung | Rust-Backend | ✅ Implementiert; 25 Backend-Tests |
-| Serverdetails mit Beschreibung und Verbindungsdaten | Frontend | ✅ Implementiert; detaillierte Modübersicht offen |
+## Geplante Verbesserungen
 
-### Phase 3 – Server-Ökosystem
+- [ ] Benötigte Mods und Gesamtdownloadgröße vor der Verbindung ausführlicher darstellen.
+- [ ] Fortsetzen von Teildownloads und begrenzte Retry-Regeln ergänzen.
+- [ ] Cache-Größe und sichere Bereinigung für Nutzer konfigurierbar machen.
+- [ ] Ressourcen-Abhängigkeiten und Versionskonflikte besser erklären.
+- [ ] Signierte Launcher-Veröffentlichungen und einen vollständigen Selbstupdateablauf vorbereiten.
+- [ ] Öffentliche Build-Assets und saubere Quell-Checkouts einfacher reproduzierbar bereitstellen.
+- [ ] Ein versioniertes Integrations-SDK für weitere Server-Forks ausarbeiten.
 
-| Aufgabe | Komponente | Status |
-| --- | --- | --- |
-| Heartbeat-Integration in den dedizierten Server | SkyMP-TypeScript-System | ✅ Implementiert; isolierter Test besteht |
-| Persistente Server-/Kontodaten | PHP-Dateispeicher/optionales SQL; Node-SQLite-Referenz | ✅ Implementiert; Produktions-DB-Abnahme offen |
-| Online-Anmeldung und Browserfreigabe | PHP-Master / Spielclient | ✅ Lokal getestet; echte Spielsitzung offen |
-| Gemeinsames Betreiberhandbuch und Doku-Webroot DE/EN/RU | Dokumentation | ✅ Vorhanden und lokal geprüft; Upload gesondert |
+## English
 
-### Phase 4 – Tooling und Abnahme
+Version 0.2.0 implements discovery, verified preparation, runtime catalogs, load order, Steam authentication, settings, diagnostics and portable releases. Remaining work focuses on broader multiplayer acceptance, deployment checks, download recovery, cache management, reproducible source inputs and signed updates. No future version or delivery date is promised here.
 
-| Aufgabe | Komponente | Status |
-| --- | --- | --- |
-| Automatische Moddateien vor Spielstart | Launcher + Server-API v2 | ✅ Implementiert und geprüft |
-| Versionskatalog für Client/SKSE/Address Library | Launcher + Paketwerkzeuge | ✅ Implementiert; 6 Paketprüfungen |
-| Nativer 1.7.104-Client | Separater Server-Fork | 🔄 Releasebuild/Adressdaten-Probes vorhanden; Spiel/CEF offen |
-| Signierter Launcher-EXE-Selbstupdateablauf | Launcher / Update-Host | ⬜ Offen; Paketupdates sind separat implementiert |
-| Entwickler-SDK | Tooling | 🔄 Anleitungen/Verträge vorhanden; versioniertes SDK offen |
-| Echtes Multiplayer-Spiel und öffentlicher Rollout | Gesamtsystem | ⬜ Offen |
+## Русский
 
-## 🇬🇧 English
-
-Implemented means the stated local scope. Unit/download/package checks do not establish an actual game session or successful deployment.
-
-### Phase 1 – Foundations
-
-| Task | Component | Status |
-| --- | --- | --- |
-| Read target server from settings | SkyMP client / SkyrimPlatform | ✅ Implemented; real game acceptance open |
-| REST server list and heartbeat API | PHP master; optional Node reference | ✅ Implemented and locally checked |
-| Write connection settings and start SKSE after preparation | Rust launcher | ✅ Implemented; actual launch acceptance open |
-
-### Phase 2 – Launcher & UI
-
-| Task | Component | Status |
-| --- | --- | --- |
-| Tauri/React project | Desktop app | ✅ Built |
-| Server browser, name search, favorites and history | Frontend | ✅ Implemented and locally checked |
-| Detect/select and validate Skyrim path | Launcher | ✅ Implemented |
-| Download, checksums, cache and restoration | Rust backend | ✅ Implemented; 25 backend tests |
-| Server descriptions and connection details | Frontend | ✅ Implemented; detailed mod preview remains open |
-
-### Phase 3 – Server ecosystem
-
-| Task | Component | Status |
-| --- | --- | --- |
-| Dedicated-server heartbeat integration | SkyMP TypeScript system | ✅ Implemented; isolated test passes |
-| Persistent server/account data | PHP file store/optional SQL; Node SQLite reference | ✅ Implemented; production DB acceptance open |
-| Online sign-in and browser consent | PHP master / game client | ✅ Locally tested; real game session open |
-| DE/EN/RU operator handbook and static docs root | Documentation | ✅ Available and locally checked; upload separate |
-
-### Phase 4 – Tooling and acceptance
-
-| Task | Component | Status |
-| --- | --- | --- |
-| Automatic pre-game mod preparation | Launcher + server API v2 | ✅ Implemented and checked |
-| Version catalog for client/SKSE/Address Library | Launcher + publishing tools | ✅ Implemented; 6 publishing checks |
-| Native 1.7.104 client | Separate server fork | 🔄 Release build/address probes available; game/CEF open |
-| Signed launcher EXE self-update | Launcher / update host | ⬜ Open; runtime-package updates are separate |
-| Developer SDK | Tooling | 🔄 Guides/contracts available; versioned SDK open |
-| Actual multiplayer gameplay and public rollout | Whole system | ⬜ Open |
-
-## 🇷🇺 Русский
-
-Реализовано означает указанный локальный объём. Тесты и проверка пакетов не подтверждают реальную игровую сессию или публикацию.
-
-### Фаза 1 – Основы
-
-| Задача | Компонент | Статус |
-| --- | --- | --- |
-| Чтение сервера назначения из настроек | Клиент SkyMP / SkyrimPlatform | ✅ Реализовано; проверка в игре открыта |
-| REST API списка серверов и heartbeat | PHP-мастер; опциональный Node-пример | ✅ Реализовано и локально проверено |
-| Запись настроек и запуск SKSE после подготовки | Rust-лаунчер | ✅ Реализовано; реальный запуск не проверен |
-
-### Фаза 2 – Лаунчер и UI
-
-| Задача | Компонент | Статус |
-| --- | --- | --- |
-| Проект Tauri/React | Десктопное приложение | ✅ Собрано |
-| Браузер серверов, поиск, избранное и история | Фронтенд | ✅ Реализовано и локально проверено |
-| Поиск/выбор и проверка пути Skyrim | Лаунчер | ✅ Реализовано |
-| Загрузка, контрольные суммы, кэш и восстановление | Rust-бэкенд | ✅ Реализовано; 25 тестов |
-| Описание сервера и параметры подключения | Фронтенд | ✅ Реализовано; подробный список модов ещё открыт |
-
-### Фаза 3 – Экосистема серверов
-
-| Задача | Компонент | Статус |
-| --- | --- | --- |
-| Heartbeat выделенного сервера | TypeScript-система SkyMP | ✅ Реализовано; изолированный тест пройден |
-| Постоянное хранение серверов/аккаунтов | PHP-файлы/опциональный SQL; Node-SQLite | ✅ Реализовано; приёмка рабочей БД открыта |
-| Вход и разрешение игры в браузере | PHP-мастер / игровой клиент | ✅ Локально проверено; реальная сессия открыта |
-| Руководства DE/EN/RU и статический сайт документации | Документация | ✅ Готовы и локально проверены; загрузка отдельно |
-
-### Фаза 4 – Инструменты и приёмка
-
-| Задача | Компонент | Статус |
-| --- | --- | --- |
-| Автоматическая подготовка модов до запуска | Лаунчер + API сервера v2 | ✅ Реализовано и проверено |
-| Каталог версий клиента/SKSE/Address Library | Лаунчер + инструменты публикации | ✅ Реализовано; 6 проверок пакетов |
-| Нативный клиент 1.7.104 | Отдельный форк сервера | 🔄 DLL и проверки базы адресов готовы; игра/CEF не проверены |
-| Подписанное самообновление EXE лаунчера | Лаунчер / сервер обновлений | ⬜ Открыто; обновление runtime-пакетов реализовано отдельно |
-| SDK разработчика | Инструменты | 🔄 Руководства/контракты готовы; версионированный SDK открыт |
-| Реальная многопользовательская игра и публичный запуск | Вся система | ⬜ Открыто |
-
-Evidence: `local-builds/current/VALIDATION.json`; current Rust tests and runtime publishing tests were rerun on 22 October. Live acceptance remains in [LIVE_ROLLOUT_CHECKLIST.md](docs/LIVE_ROLLOUT_CHECKLIST.md).
+В 0.2.0 реализованы поиск серверов, проверенная подготовка файлов, каталоги клиента, порядок модов, Steam, настройки, диагностика и portable-релиз. Следующие задачи — расширенные игровые проверки, проверка публикаций, восстановление загрузок, управление кешем, воспроизводимые исходные данные сборки и подписанные обновления. Номера и сроки будущих версий здесь не назначаются.

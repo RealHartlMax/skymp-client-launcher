@@ -1,5 +1,7 @@
 # Client, SKSE und Address Library unabhängig vom Launcher aktualisieren
 
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
 Die Launcher-EXE enthält keine SKSE-/SkyMP-DLLs. Sie startet den SKSE-Loader aus
 dem ausgewählten Spieleordner, nachdem Client- und Serverdateien vorbereitet wurden.
 Ein installiertes Skyrim genügt für die Ersteinrichtung. Ein vollständiges externes
@@ -47,7 +49,7 @@ node launcher/scripts/build-client-runtime.mjs `
 
 node launcher/scripts/create-runtime-manifest.mjs `
   --source D:/GitHub/skymp/build/dist/client `
-  --output ./publish/client-runtime/1.7.104.0/client-2026-10-21 `
+  --output ./publish/client-runtime/1.7.104.0/client-2026-10-26-example `
   --game-version 1.7.104.0 `
   --skse-version 2.3.1 `
   --skse-source C:/Pakete/skse64_2_03_01 `
@@ -57,7 +59,7 @@ node launcher/scripts/create-runtime-manifest.mjs `
 
 node launcher/scripts/create-runtime-catalog.mjs `
   --root ./publish/client-runtime `
-  --manifest 1.7.104.0/client-2026-10-21/runtime-manifest.json
+  --manifest 1.7.104.0/client-2026-10-26-example/runtime-manifest.json
 ```
 
 Für mehrere Skyrim-Versionen `--manifest` pro freigegebenem Paket wiederholen.
@@ -180,3 +182,15 @@ Skyrim 1.7 ebenfalls aktualisiert oder gezielt deaktiviert werden.
 Die Launcher-Downloadtests und der eigenständige native Adressdatenbank-Test ersetzen
 keinen vollständigen Skyrim-/SKSE-Spieltest. Dessen Ergebnis muss je Clientfreigabe
 separat ausgewiesen werden.
+
+## Aktueller Ablauf und native Korrekturen
+
+Die Korrekturen an CommonLib/Address-Library-Format, CEF-/Threadpool-Verhalten und Tint-Zugriff gehören zur nativen Spiel-Runtime im separaten Server-Fork. Für den vorbereiteten 1.7.104.0-Client wurde nach der Tint-Korrektur ein erfolgreicher Spielstart und Bewegung gemeldet. Das ist eine Rückmeldung zu dieser Kombination, keine Garantie für andere Versionen oder Modpakete.
+
+Ein neuer Launcher-Build enthält diese DLLs nicht. Ein neuer Server-Build ersetzt sie ebenfalls nicht automatisch beim Spieler: Maßgeblich sind das veröffentlichte Runtime-Manifest und seine Prüfsummen. Ein alter manuell gesetzter lokaler Clientpfad hat Vorrang vor einem Serverangebot und muss für automatische Katalogupdates geleert werden.
+
+Die aktuelle Launcher-Veröffentlichung wird separat nach [RELEASING.md](RELEASING.md) verpackt. Ändert sich nur Dokumentation, sind weder eine neue EXE noch ein neues Runtime-Paket nötig.
+
+**English:** The launcher selects a matching runtime, not simply the newest file. Server catalogs and SHA-256 determine updates; a manual local source overrides them. Native fixes are shipped as new immutable runtime packages, independently of launcher and server releases.
+
+**Русский:** Лаунчер выбирает совместимую среду, а не просто самый новый файл. Обновления определяются каталогом сервера и SHA-256; вручную выбранный локальный источник имеет приоритет. Нативные исправления поставляются отдельными неизменяемыми пакетами, независимо от лаунчера и сервера.

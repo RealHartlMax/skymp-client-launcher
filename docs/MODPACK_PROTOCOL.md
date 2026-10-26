@@ -1,5 +1,7 @@
 # Modpakete vor dem Spielstart installieren
 
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+
 Der eigenständige Launcher in `skymp-client-launcher` bereitet die benötigten
 Dateien vor, bevor er SKSE startet. Die Dateien kommen vom Dateiserver des
 Spielserverbetreibers. Spieler benötigen dafür keinen Nexus-/Vortex-Account.
@@ -25,6 +27,10 @@ vom Launcher verwalteten Dateien. **Originaldateien wiederherstellen** stellt
 auch die vorherige Einzelspieler-Ladereihenfolge wieder her.
 
 ## Moddateien auf dem Server bereitstellen
+
+Im aktuellen Gameserver-Adminpanel unter **Ressourcen** die hochgeladenen `.esm`, `.esp` und `.esl` neu einlesen, gewünschte Plugins aktivieren und mit den Pfeilen ordnen. Neue Uploads bleiben zunächst deaktiviert. **Ladereihenfolge speichern** aktualisiert `loadOrder` in der vorhandenen Konfiguration; anschließend den Spielserver neu starten. Die technischen Beispiele unten erklären den Vertrag, ersetzen aber nicht die vorhandenen Welten oder Einstellungen.
+
+`Skyrim.esm` bleibt zuerst; benötigte Master müssen vor abhängigen Plugins stehen. Der Launcher schreibt die freigegebene Reihenfolge auch bei Cache-Nutzung und Serverwechsel in `plugins.txt` und `loadorder.txt`. Manuelle JSON-Bearbeitung ist für den normalen Ressourcenablauf nicht nötig.
 
 Beispiel im entpackten Serververzeichnis:
 
@@ -196,3 +202,9 @@ Rust-Downloader gegen diese API: vollständige Installation, Cachetreffer,
 beschädigte Cachedateien, Updates, fehlerhafte Pakete und Wiederherstellung.
 Ein echter Skyrim-/CEF-Test und die zuvor offene Client-Runtime-Kompatibilität
 bleiben separate Prüfungen.
+
+## English / Русский
+
+In the game-server Resources panel, rescan uploaded plugins, enable them, arrange their load order, save and restart the game server. The launcher validates the manifest, applies that order and preserves original load-order files. Native DLLs/SKSE remain in the separate runtime package.
+
+В ресурсах игрового сервера повторно просканируйте загруженные плагины, включите их, задайте порядок, сохраните и перезапустите сервер. Лаунчер проверяет манифест и применяет порядок, сохраняя исходные списки. Нативные DLL и SKSE поставляются отдельным пакетом runtime.

@@ -1,12 +1,18 @@
 # Handbuch für Serverbetreiber
 
+<a id="compatibility"></a>
+
 ## Geltungsbereich & Kompatibilität {#compatibility}
 
-Diese Anleitung beschreibt den gemeinsamen SkyMP-Worlds-Launcher **0.2.0** und die am **22.10.2026** geprüften Schnittstellen. Du kannst einen bestehenden kompatiblen SkyMP-Server erweitern oder den [RealHartlMax/SkyMP-Fork](https://github.com/RealHartlMax/skymp) als Grundlage verwenden. Die Spielerdaten und die Spielwelt werden durch eine Registrierung im Launcher nicht automatisch migriert.
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**. Server- und Runtime-Versionen werden separat geprüft.
+
+Diese Anleitung beschreibt den gemeinsamen SkyMP-Worlds-Launcher **0.2.0** und die am **26.10.2026** geprüften Schnittstellen. Du kannst einen bestehenden kompatiblen SkyMP-Server erweitern oder den [RealHartlMax/SkyMP-Fork](https://github.com/RealHartlMax/skymp) als Grundlage verwenden. Die Spielerdaten und die Spielwelt werden durch eine Registrierung im Launcher nicht automatisch migriert.
 
 **Es gibt keine Kompatibilitätsgarantie.** Ein Servereintrag, ein erfolgreich geladenes Manifest oder ein erfolgreicher Build beweist noch keine funktionierende Spielsitzung. Spielprotokoll, Server, nativer Client, Skyrim-Version, SKSE, Address Library, Mods und Ladereihenfolge müssen zusammenpassen. Ein anderer Multiplayer-Mod wird durch zusätzliche HTTP-Routen nicht automatisch SkyMP-kompatibel.
 
 Prüfe Änderungen zunächst auf einer getrennten Testinstallation. Sichere Serverkonfiguration, Weltdaten, Konten und Schlüssel vor einer Umstellung. Die Beispiele enthalten absichtlich erkennbare Platzhalter; Dateigrößen, CRC32 und SHA-256 müssen aus deinen tatsächlichen Dateien erzeugt werden.
+
+<a id="architecture"></a>
 
 ## Welche Dienste zusammenarbeiten {#architecture}
 
@@ -20,6 +26,8 @@ Prüfe Änderungen zunächst auf einer getrennten Testinstallation. Sichere Serv
 | Clientkatalog | Vollständige URL zu `catalog.json` | Passende native Client-/SKSE-Kombination auswählen |
 
 Spieladresse, Dateiserver und Master sind unterschiedliche Ziele. `resourceUrl` ist die Basis des Dateiservers, nicht die URL seiner Manifestroute. `runtimeSource` ist dagegen eine vollständige Katalog- oder Clientmanifest-URL. Der Launcher bereitet Dateien vor und startet anschließend den SKSE-Loader aus dem ausgewählten Spielverzeichnis.
+
+<a id="fork"></a>
 
 ## Weg A: Den verlinkten Fork verwenden {#fork}
 
@@ -38,6 +46,8 @@ cd skymp-server-source
 
 Das Klonen ist noch kein Build und kein Serverstart. Für die Launcher-Erweiterung sind insbesondere `skymp5-server/ts/launcherResources.ts`, deren Registrierung in `ui.ts` sowie die Master-/Login-Systeme relevant. Die veröffentlichten Modrouten wurden mit dem lokalen Stand verglichen; das ersetzt keine Prüfung deiner eigenen Binärdateien. Lokale, noch nicht veröffentlichte Clientanpassungen sind durch einen Repository-Link nicht automatisch verfügbar.
 
+<a id="existing"></a>
+
 ## Weg B: Einen bestehenden Server integrieren {#existing}
 
 Erweitere deinen bisherigen Server gezielt. Der gemeinsame Launcher verändert weder deine Gamemode-Logik noch dein Datenbankformat. Eine abweichende Implementierung kann zusätzliche Anpassungen benötigen.
@@ -55,7 +65,11 @@ Die neue Modbereitstellung ist im Fork ein eigener Ressourcenbaustein mit expliz
 
 Ein bereits laufender Server kann für erste Tests weiterhin per **Direktverbindung** geöffnet werden. Für die öffentliche Namenssuche ist zusätzlich die Registrierung mit einem gültigen Heartbeat erforderlich. Eine öffentliche Registrierung bestätigt keine technische Kompatibilität.
 
+<a id="registration"></a>
+
 ## Konto, Servereintrag & öffentliche Identität {#registration}
+
+Servername und maximale Spielerzahl werden ausschließlich im Gameserver-Adminpanel gepflegt und per authentifiziertem Heartbeat übernommen. Das zentrale Web zeigt diese Werte an. Empfohlene Bilder: Logo **512 × 512** oder **1024 × 1024**, Banner **3072 × 512** (6:1); beide als PNG neben `server-settings.json`.
 
 1. Erstelle ein reguläres Konto im [Betreiber-Dashboard](https://manage.skymp-worlds.net/) und bestätige gegebenenfalls die E-Mail-Adresse. Demo-Zugänge werden nicht für Spielanmeldungen verwendet.
 2. Lege deinen Server mit öffentlichem Host und UDP-Spielport an. Name und Spielerlimit stellst du nur auf dem Spielserver ein; das Web übernimmt sie per Heartbeat. Wähle den Status `active`, wenn der Eintrag öffentlich verfügbar sein soll.
@@ -71,6 +85,16 @@ Ein bereits laufender Server kann für erste Tests weiterhin per **Direktverbind
 | Login-Token / Spielsession | Privat | Zeitlich begrenzte Benutzer- bzw. Serveranmeldung |
 
 Veröffentliche niemals den privaten Heartbeat-Schlüssel als Beschreibung, Tag oder Download. Er gehört nicht in das Launcher-Profil des Spielers. Eine Schlüsselrotation erfolgt über das Dashboard; aktualisiere danach die private Serverkonfiguration und starte den Server neu.
+
+### Servername, Spielerlimit und Erreichbarkeit
+
+Servername und maximale Spielerzahl werden ausschließlich im Adminpanel des Spielservers eingestellt. Die Webseite zeigt diese Werte schreibgeschützt aus dem authentifizierten Heartbeat. Das Speichern der Web-Registrierung erzeugt keinen eigenen Heartbeat. Noch nie gemeldete Server erscheinen erst nach ihrem ersten vollständigen Heartbeat in der öffentlichen Liste.
+
+Jeder Heartbeat enthält mindestens `name`, `maxPlayers` und die aktuelle Spielerzahl `online`. Der optionale Wert `serverStatus` lautet `online` oder `offline`. Beim geordneten Stoppen meldet der aktuelle Fork `offline`. Ohne neuen Heartbeat gilt ein bekannter Server nach **5 Minuten** als offline. Die öffentliche Liste liefert `server_status` und `last_heartbeat`. Bekannte Offline-Server bleiben sichtbar und sind nicht verbindbar. Nach dem nächsten Online-Heartbeat sind sie wieder verfügbar. Launcher und Webliste aktualisieren sich bei sichtbarer Seite alle 30 Sekunden.
+
+Der Offline-Indikator ist unabhängig von `offlineMode`, das die Art der Spielanmeldung festlegt. Beim Umbenennen oder Ändern des Limits die Serverkonfiguration speichern und den Spielserver bei Bedarf neu starten.
+
+<a id="configuration"></a>
 
 ## Vorhandene Serverkonfiguration ergänzen {#configuration}
 
@@ -104,7 +128,11 @@ Das folgende JSON ist ein **Zusammenführungsbeispiel**, keine vollständige Ers
 
 Der Katalog unter der Update-Domain muss tatsächlich hochgeladen und für deine Client-/Serverkombination geeignet sein. Die URL ist keine allgemeine Zusage für jede Skyrim-Version. Du kannst stattdessen eine eigene vollständige `catalog.json` anbieten. Halte die Angaben im Servermanifest und im Dashboard konsistent; nach einer Änderung der Downloadangaben wird ein neuer Heartbeat benötigt.
 
+<a id="network"></a>
+
 ## Erreichbarkeit, TLS & Reverse Proxy {#network}
+
+Beim aktuellen Steam-Zugang werden `/api/launcher/auth-policy` und `/api/launcher/auth/steam` gegen die Hostwurzel der Ressourcenadresse aufgelöst. Liegt die Dateifreigabe hinter einem Pfadpräfix wie `/realm/`, müssen diese beiden Auth-Routen zusätzlich am Hostwurzelpfad weitergeleitet werden. Eine eigene Dateiserver-Subdomain ohne Pfadpräfix vermeidet diese besondere Proxy-Zuordnung.
 
 | Verbindung | Typische Freigabe | Prüfen |
 | --- | --- | --- |
@@ -119,7 +147,11 @@ Nutze bei einem Proxy die endgültige öffentliche Basis-URL, beispielsweise `ht
 
 Die Download-/Katalog-URLs dürfen keine Zugangsdaten, Query-Parameter oder Fragmente enthalten. Der öffentliche PHP-Master lehnt private, Loopback- und Link-Local-Ziele ab, auch bei DNS-Auflösung. `127.0.0.1` bedeutet aus Sicht eines Spielers dessen eigenen Rechner. Für lokale Entwicklung verwende eine direkte lokale Verbindung; veröffentliche keine internen Adressen im Produktivprofil. Die Launcher-Dateizugriffe laufen im Rust-Backend und benötigen keine Browser-CORS-Freigabe.
 
+<a id="resources"></a>
+
 ## Mods, Assets & Ladereihenfolge bereitstellen {#resources}
+
+Im Adminpanel unter **Ressourcen** hochgeladene Plugins neu einlesen, aktivieren und mit den Pfeilen ordnen. Neue Uploads sind zunächst deaktiviert. **Ladereihenfolge speichern** verändert nur `loadOrder` in der bestehenden Serverkonfiguration. Danach den Spielserver neu starten. Die Dateistruktur und der technische Vertrag darunter bleiben maßgeblich; ein manuelles Kopieren von JSON ist für diesen Ablauf nicht nötig.
 
 ```text
 server-settings.json
@@ -151,6 +183,8 @@ Alle zusätzlichen `.esm`, `.esp` und `.esl` müssen in der tatsächlichen Serve
 Native DLLs und JavaScript gehören in das getrennte Clientpaket. Geschützte Plattform-/Anmeldedateien, Bethesda-Master und Creation-Club-Dateien werden nicht als Moddownload angeboten. Pfadwechsel, Symlinks/Junctions, Windows-Gerätenamen, Doppelpunkte, nachgestellte Punkte/Leerzeichen und nur in der Großschreibung unterschiedliche Zielpfade werden abgewiesen. Für die neue Mod-API gilt eine Zielpfadlänge von höchstens 240 UTF-8-Bytes.
 
 ZIP-/7z-/FOMOD-Pakete werden nicht beim Spieler entpackt oder interaktiv installiert. Bereite die gewünschte Modauswahl selbst vor und veröffentliche nur die benötigten, zur Weitergabe vorgesehenen Dateien. Eigene Skyrim-/DLC-Dateien müssen aus der passenden Installation des Spielers stammen.
+
+<a id="manifest"></a>
 
 ## Manifest v2: Vertrag für eigene Implementierungen {#manifest}
 
@@ -197,6 +231,8 @@ Ein Generator muss die freigegebenen Quellwurzeln prüfen, Links ausschließen, 
 
 Grenzen des aktuellen Vertrags: höchstens **10.000 Moddateien**, **8 GiB je Datei**, **64 GiB je Modpaket**; JSON-Manifeste werden im Launcher auf **8 MiB** begrenzt. Gleiche Grenzwerte und geschützte Zielpfade gehören in eine eigene Implementierung.
 
+<a id="downloads"></a>
+
 ## Download-Endpunkte & HTTP-Antworten {#downloads}
 
 `GET` bzw. `HEAD <resourceUrl>/api/launcher/files/<id>` muss die im Manifest angekündigte Datei liefern. Eine Ressourcen-ID bezeichnet eine freigegebene Datei; sie darf nicht als beliebiger Dateisystempfad ausgewertet werden. Ein separater Dateihost ist möglich, wenn das Manifest und alle relativen Routen unter seiner Basis erreichbar bleiben.
@@ -213,6 +249,8 @@ Grenzen des aktuellen Vertrags: höchstens **10.000 Moddateien**, **8 GiB je Dat
 | `503` | Veröffentlichung unvollständig, nicht lesbar oder widersprüchlich |
 
 Der Fork sendet außerdem `X-Resource-Hash`, `ETag` und `Accept-Ranges: bytes`. Unveränderliche Datei-IDs dürfen langfristig gecacht werden; das Manifest muss aktuell bleiben. Der Launcher prüft heruntergeladene Daten unabhängig von den HTTP-Headern gegen Größe und SHA-256. Er benötigt vollständige Downloads; HTTP-Range-Unterstützung ist keine Zusage, dass ein abgebrochener Download in dieser Launcher-Version fortgesetzt wird.
+
+<a id="legacy"></a>
 
 ## Ältere Server: Legacy-Vertrag {#legacy}
 
@@ -231,6 +269,8 @@ Der ältere Ressourcenvertrag verwendet `version: "1"`, flache Dateinamen und Do
 ```
 
 Ohne Ressourcen-API funktioniert dieser Weg nur, wenn alle erforderlichen Dateien bereits lokal vorhanden sind und zu den veröffentlichten Größen/CRC32 passen. Eine alte pauschale `.esm`-Sperre oder ein fehlender Download für eigene Plugins wird dadurch nicht repariert. Für neue Integrationen und strukturierte Modpakete verwende v2.
+
+<a id="runtime"></a>
 
 ## Client, SKSE & Address Library veröffentlichen {#runtime}
 
@@ -289,7 +329,20 @@ Die üblichen Zielordner liegen unter dem Spielverzeichnis: `Data/Platform/Plugi
 
 Fehlt `runtimeSource` sowohl im Servermanifest als auch im ausgewählten Profil, kann der Launcher nur vorhandene Clientdateien verwenden; es gibt dann kein angebotenes automatisches Clientupdate. Eine Änderung der angebotenen Clientdateien wird bei der nächsten Vorbereitung über Manifest und Dateihashes erkannt. Neu herunterladen muss er nur fehlende oder abweichende Dateien. Der private Anmeldestatus und die erzeugten Verbindungseinstellungen sind von Clientpaketen ausgeschlossen.
 
+<a id="authentication"></a>
+
 ## Online-Anmeldung & Sitzungsvertrag {#authentication}
+
+Der normale Spielerzugang verwendet **Steam**. Der Launcher liest die Policy vom Gameserver, holt ein Ticket für genau die gelieferte Dienstkennung und übergibt es zur Prüfung. Der Server entscheidet über Whitelist/Freigabe. Ein zusätzliches SkyMP-Webkonto ist nur nötig, wenn die Antwort `accountLoginRequired` verlangt. Der Modus `guest` bezeichnet diesen Zugang ohne zusätzliches Webkonto und schaltet die Steam-Prüfung nicht aus.
+
+| Auf dem Gameserver | Bedeutung |
+| --- | --- |
+| `GET /api/launcher/auth-policy` | Steam-/Zugangs-Policy und Ticket-Dienstkennung |
+| `POST /api/launcher/auth/steam` | Steam-Ticket und optionalen Anzeigenamen prüfen |
+
+Ausstehende Anfragen werden im Gameserver-Adminpanel unter **Whitelist / Spielerzugang** freigegeben. Vor der Freigabe muss noch keine verbundene Spielfigur vorhanden sein. Steam-ID, Anzeigename und Charakterzuordnung bleiben getrennt. Der Splashscreen schließt nach bestätigtem Prozessstart; das ist keine Bestätigung, dass die Spielwelt schon geladen ist.
+
+### Master- und optionale Legacy-Anmeldung
 
 Die zentrale Plattform verwendet reguläre Dashboard-Konten, eine ausdrückliche Spielzustimmung und servergebundene Sessions. `offlineMode` muss auf dem Server und im Verbindungsprofil zusammenpassen. Nur im Launcher auf offline umzuschalten ändert die Serverauthentifizierung nicht.
 
@@ -308,6 +361,8 @@ Die zentrale Plattform verwendet reguläre Dashboard-Konten, eine ausdrückliche
 Eine Session gilt nur für den vorgesehenen Server und dessen aktuellen privaten Schlüssel. Ablauf, Dashboard-Abmeldung und Schlüsselrotation können Sitzungen ungültig machen. Der Server muss ungültige Sessions ablehnen. Ein neuer Master darf bestehende numerische Spielidentitäten nicht ohne eine geplante Datenmigration neu vergeben.
 
 Der historische Routenname `login-discord` bedeutet bei diesem PHP-Master **keine automatisch eingerichtete Discord-OAuth- oder Gildenprüfung**. Zusätzliche Discord-Rollen-/Gildenregeln benötigen eine passende echte Providerintegration. Der öffentliche Community-Einladungslink ist kein Anmeldeanbieter. Ein eigener kompatibler Master lässt sich für direkte Verbindungen konfigurieren; ein zentral registrierter Server nutzt die im zentralen Listeneintrag veröffentlichten Masterangaben.
+
+<a id="validation"></a>
 
 ## Installation prüfen, bevor Spieler beitreten {#validation}
 
@@ -340,6 +395,8 @@ Der Launcher führt Hash- und Versionsprüfungen vor der Aktivierung aus. Ein fa
 
 Erst jetzt einen echten Skyrim-/SKSE-Test mit der vorgesehenen Version durchführen: Start, Browseranmeldung und Zustimmung, Session-Prüfung, UDP-Verbindung, gemeinsame Spielwelt und erneutes Verbinden. Prüfe zusätzliche native Plugins getrennt. Ein bestandener Datei- oder API-Test ist kein Ersatz für diesen Test. Dokumentiere den tatsächlich getesteten Server-/Clientstand und das Modpaket, bevor du es für Spieler anbietest.
 
+<a id="operations"></a>
+
 ## Updates, Rücknahme & Wiederherstellung {#operations}
 
 Veröffentliche neue Mod- und Clientdateien als zusammenhängende Freigabe. Halte Ladereihenfolge, Serverdaten und Clientressourcen synchron. Für Clientupdates neue unveränderliche Paketpfade erzeugen, alle Dateien hochladen und den Katalog zuletzt umstellen. Eine Katalogänderung ersetzt keinen nötigen Serverneustart bei geänderten Plugins.
@@ -349,6 +406,8 @@ Die Launcher-Caches sind nach Serverziel getrennt. Originale und Aktivierungsjou
 Sichere Weltdaten und Serverkonfiguration vor Updates unabhängig vom Launcher. Der Betreiber der zentralen PHP-Plattform muss Kontenspeicher und den privaten Auth-Speicher samt Identitätszuordnung und Schlüssel gemeinsam erhalten. Eine Rücknahme des Clientkatalogs stellt nur die angebotenen Clientdateien um; sie ist keine automatische Rücknahme einer Server-/Weltdatenmigration.
 
 Bei einer gesperrten oder kompromittierten Serveridentität Schlüssel rotieren, private Konfiguration aktualisieren und den Heartbeat neu starten. Für Support reichen öffentliche ID, Zeit, Launcher-/Client-/Skyrim-Version und bereinigte Fehlermeldungen. Passwörter, private Master-Schlüssel und Sessions gehören nicht in einen Discord-Beitrag.
+
+<a id="troubleshooting"></a>
 
 ## Häufige Fehler gezielt eingrenzen {#troubleshooting}
 
@@ -370,9 +429,15 @@ Bei einer gesperrten oder kompromittierten Serveridentität Schlüssel rotieren,
 
 Benötigst du Hilfe, nutze den [SkyMP-Worlds-Discord](https://discord.gg/NSXtNNbjuR). Ein einzelner behobener Ladefehler ist noch kein Nachweis, dass alle weiteren nativen Plugins zur Spielversion passen.
 
+### Fehlende gamemode.js wiederherstellen
+
+`ENOENT ... gamemode.js` betrifft die Gamemode-Datei auf dem VPS. Eine eigene Gamemode aus der Sicherung wiederherstellen oder im Server-Adminpanel unter **CFG-Editor → Allgemein → Gamemode-Datei auf dem Server** den vorhandenen Dateipfad eintragen, speichern und den Spielserver neu starten. Der Pfad ist relativ zum Server-Arbeitsverzeichnis oder absolut. Eine im Serverpaket enthaltene Standard-Gamemode ist nur für einen unveränderten Standardserver gedacht; eine eigene Gamemode muss aus der eigenen Sicherung wiederhergestellt werden. Der Dateiwächter behält eine bereits geladene Gamemode bei einer vorübergehenden Dateilücke und lädt sie nach der Wiederherstellung erneut.
+
+<a id="sources"></a>
+
 ## Quellen, Versionsstand & Verantwortung {#sources}
 
-Die Anleitung wurde gegen Launcher **0.2.0**, den lokalen Server-Quellstand auf Basis von Commit `a037003d57890b26ed21936ac2432c987aced878` und die veröffentlichte Ressourcenimplementierung des verlinkten Forks geprüft. Stand: **22.10.2026**. Spätere Commits, lokale Erweiterungen und fremde Forks können abweichen. Die im vorbereiteten Clientkatalog vorhandene Kombination ist keine Zusage für andere Spielversionen; ein vollständiger Spieltest bleibt Aufgabe der jeweiligen Freigabe.
+Dieses Handbuch wurde am **26.10.2026** mit dem Launcher-Stand **0.2.0** und den dokumentierten Schnittstellen abgeglichen. Der Windows-Launcher wurde gebaut; 69 aktive Rust-Tests bestehen, drei Integrationsprüfungen sind ausgenommen. Der Nutzer hat Start und Bewegung mit der separat bereitgestellten nativen Runtime bestätigt. Das ersetzt keine eigene Abnahme weiterer Server-, Spiel- oder Modversionen. Der verlinkte Server-Fork entwickelt sich unabhängig; eine frühere feste Commitangabe ist keine Zusage für spätere Builds.
 
 - [Server-Fork und Quellcode](https://github.com/RealHartlMax/skymp)
 - [Modmanifest und Dateirouten im Fork](https://github.com/RealHartlMax/skymp/blob/main/skymp5-server/ts/launcherResources.ts)
@@ -383,17 +448,7 @@ Die Anleitung wurde gegen Launcher **0.2.0**, den lokalen Server-Quellstand auf 
 
 Dieser Webbereich ist statisch und benötigt auf dem Webspace keinen Node-Prozess und keine Datenbank. Hauptseite, Dashboard, Master, Dateihost und Spielserver werden dadurch nicht automatisch bereitgestellt. Für den Betrieb bleiben die jeweiligen Betreiber und ihre geprüfte Server-/Clientkombination verantwortlich. **Eine Garantie für die Integration in bestehende Server oder beliebige Modpakete wird nicht gegeben.**
 
-### Servername, Spielerlimit und Offline-Status (24.10.2026)
-
-Servername und maximale Spielerzahl werden ausschließlich im Adminpanel des Spielservers eingestellt. Die Webseite zeigt diese Werte schreibgeschützt aus dem authentifizierten Heartbeat. Das Speichern der Web-Registrierung erzeugt keinen eigenen Heartbeat. Noch nie gemeldete Server erscheinen erst nach ihrem ersten vollständigen Heartbeat in der öffentlichen Liste.
-
-Jeder Heartbeat enthält mindestens `name`, `maxPlayers` und die aktuelle Spielerzahl `online`. Der optionale Wert `serverStatus` lautet `online` oder `offline`. Beim geordneten Stoppen meldet der aktuelle Fork `offline`. Ohne neuen Heartbeat gilt ein bekannter Server nach **5 Minuten** als offline. Die öffentliche Liste liefert `server_status` und `last_heartbeat`. Bekannte Offline-Server bleiben sichtbar und sind nicht verbindbar. Nach dem nächsten Online-Heartbeat sind sie wieder verfügbar. Launcher und Webliste aktualisieren sich bei sichtbarer Seite alle 30 Sekunden.
-
-Der Offline-Indikator ist unabhängig von `offlineMode`, das die Art der Spielanmeldung festlegt. Beim Umbenennen oder Ändern des Limits die Serverkonfiguration speichern und den Spielserver bei Bedarf neu starten.
-
-### Fehlende gamemode.js wiederherstellen
-
-`ENOENT ... gamemode.js` betrifft die Gamemode-Datei auf dem VPS. Eine eigene Gamemode aus der Sicherung wiederherstellen oder im Server-Adminpanel unter **CFG-Editor → Allgemein → Gamemode-Datei auf dem Server** den vorhandenen Dateipfad eintragen, speichern und den Spielserver neu starten. Der Pfad ist relativ zum Server-Arbeitsverzeichnis oder absolut. Der r4-Serverdownload enthält eine Standarddatei namens `gamemode.js`; diese ist nur für einen unveränderten Standardserver gedacht und ersetzt keine eigene Gamemode. Der neue Datei-Wächter behält eine bereits geladene Gamemode während einer vorübergehenden Dateilücke und lädt die Datei wieder, sobald sie vorhanden ist.
+<a id="resources-player-name"></a>
 
 ## Ressourcen und Spielername im Dashboard {#resources-player-name}
 
@@ -404,3 +459,9 @@ Ladereihenfolge speichern ändert ausschließlich loadOrder der bestehenden Konf
 Der Launcher überträgt einen Spieler-Anzeigenamen zusätzlich zur bestätigten Steam-ID. Er erscheint in der Freigabe/Whitelist und in der Spieleransicht. Name und RP-Figurenname bleiben getrennt; Identität, Freigabe und Profil ändern sich durch Umbenennen nicht. Der neue Server-Quellstand ist für diese Anzeige erforderlich.
 
 Die optionale Discord-Webanmeldung wird auf dem PHP-Webhosting mit privatem Client-Secret eingerichtet. Bestehende Passwortkonten werden nach der Anmeldung ausdrücklich unter https://manage.skymp-worlds.net/account.php verknüpft. Der Discord-Aktivitätsstatus im Launcher benötigt nur die öffentliche App-ID und die Desktop-App, keine Web-OAuth-Anmeldung. Eine Discord-Gilden- oder Rollenprüfung wird hierdurch nicht hinzugefügt.
+
+### Spielerprofil und bestätigte Kennungen
+
+Das Spielerprofil zeigt die vom Gameserver bestätigte Steam-ID separat schreibgeschützt an. Manuelle Kennungen und interne Notizen bleiben bearbeitbar und ersetzen diese Identität nicht. Ein gerade verbundener Spieler muss auch dann sofort ein Profil erhalten, wenn die Spielerliste bisher nur über WebSocket aktualisiert wurde.
+
+Bei dem früheren Profil-404 mit „API-Fehler — Serververbindung prüfen“ gehören die Korrektur und das Update auf den Gameserver: beide JavaScript-Backends und das Dashboard-Frontend aktualisieren, den gesamten Dienst einschließlich Dashboard neu starten und den Browser mit Strg+F5 laden. Spieler-/Konfigurationsdaten bleiben erhalten. Ein Launcher-Build ersetzt diese Dateien nicht.
