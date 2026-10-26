@@ -1,8 +1,11 @@
 local-builds/
-web/*
+web/**
+master-api/.env
+master-api/data/
 
 # Launcher build/test artifacts
 launcher/node_modules/
 launcher/dist/
 launcher/src-tauri/target/
 launcher/test-launcher.exe
+launcher/.env.local

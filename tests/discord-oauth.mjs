@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { startPhpFixture } from './php-master-smoke.mjs';
+const execute=promisify(execFile);
+const output=resolve(process.env.DISCORD_TEST_OUTPUT || 'local-builds/current/launcher-settings-2026-10-25');
+await mkdir(output,{recursive:true});
+const fixture=await startPhpFixture();
+const checks=[];
+try {
+  const unitDirectory=join(output,'php-fixture'); await mkdir(unitDirectory,{recursive:true});
+  const unit=await execute(fixture.php,['tests/php-discord-oauth.php',unitDirectory],{cwd:resolve('.'),timeout:30000});
+  const unitReport=JSON.parse(unit.stdout); checks.push(...unitReport.checks);
+  const request=fixture.manageRequest;
+  assert.equal((await request('/account.php')).status,302);
+  let response=await request('/oauth/discord-start.php'); assert.equal(response.status,302); assert.equal(response.headers.get('location'),'/login.php');
+  await appendFile(join(fixture.root,'manage.skymp-worlds.net/config.php'),"\ndefine('MANAGE_DISCORD_CLIENT_SECRET','only-a-local-fixture-secret');\n");
+  response=await request('/oauth/discord-start.php'); assert.equal(response.status,302);
+  const authorization=new URL(response.headers.get('location'));
+  assert.equal(authorization.origin,'https://discord.com'); assert.equal(authorization.pathname,'/oauth2/authorize');
+  assert.equal(authorization.searchParams.get('client_id'),'1496895150322876555');
+  assert.equal(authorization.searchParams.get('redirect_uri'),'https://manage.skymp-worlds.net/oauth/discord-callback.php');
+  assert.equal(authorization.searchParams.get('scope'),'identify email'); assert.match(authorization.searchParams.get('state'),/^[a-f0-9]{64}$/);
+  assert(!authorization.href.includes('secret'));
+  const state=authorization.searchParams.get('state');
+  response=await request('/oauth/discord-callback.php?state='+state+'&error=access_denied'); assert.equal(response.status,302);
+  assert(!(await (await request('/login.php')).text()).includes('only-a-local-fixture-secret'));
+  response=await request('/oauth/discord-callback.php?state='+state+'&code=must-not-exchange'); assert.equal(response.status,302);
+  const replayPage=await request('/login.php?lang=de'); const replayHtml=await replayPage.text();
+  await writeFile(join(output,'oauth-replay-response.html'),replayHtml);
+  assert(/Statusprüfung|state validation/i.test(replayHtml), 'Replay must show a state validation error, HTTP '+replayPage.status);
+  checks.push('Real PHP redirects use the supplied application/callback, exact scopes and fresh state; cancellation and replay stop before token exchange');
+  await fixture.login();
+  for(const language of ['de','en','ru']) {
+    response=await request('/account.php?lang='+language); assert.equal(response.status,200);
+    const html=await response.text(); assert(html.includes('name="mode" value="link"')); assert(html.includes('name="csrf_token"')); assert(!html.includes('only-a-local-fixture-secret'));
+  }
+  response=await request('/oauth/discord-start.php?mode=link'); assert.equal(response.status,302); assert.equal(response.headers.get('location'),'/account.php');
+  response=await request('/oauth/discord-start.php',{method:'POST',body:new URLSearchParams({mode:'link',csrf_token:'invalid'})}); assert.equal(response.status,403);
+  const html=await (await request('/account.php?lang=de')).text();
+  response=await request('/oauth/discord-start.php',{method:'POST',body:new URLSearchParams({mode:'link',csrf_token:fixture.csrf(html)})});
+  assert.equal(response.status,302); const linkUrl=new URL(response.headers.get('location')); assert.match(linkUrl.searchParams.get('state'),/^[a-f0-9]{64}$/);
+  assert.notEqual(linkUrl.searchParams.get('state'),state);
+  response=await request('/oauth/discord-callback.php?state='+linkUrl.searchParams.get('state')+'&error=access_denied'); assert.equal(response.status,302); assert.equal(response.headers.get('location'),'/account.php');
+  checks.push('Authenticated account page in all three languages; explicit linking requires POST plus CSRF and binds its callback to the same session');
+  const report={ok:true,checks,liveDiscord:false,liveMysql:false,productionModified:false};
+  await writeFile(join(output,'oauth-validation.json'),JSON.stringify(report,null,2)+'\n'); console.log(JSON.stringify(report));
+} finally { await fixture.stop(); }

@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "SkyMP Launcher",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "tauri": {
     "allowlist": {
@@ -17,19 +17,23 @@
         "all": false,
         "execute": true,
         "sidecar": false,
-        "open": false
+        "open": "^https?://.+"
       },
       "fs": {
         "all": false,
         "writeFile": true,
-        "scope": ["$APPDATA/*"]
+        "scope": [
+          "$APPDATA/*"
+        ]
       }
     },
     "bundle": {
       "active": false,
       "targets": "all",
       "identifier": "io.skymp.launcher",
-      "icon": ["icons/icon.png"]
+      "icon": [
+        "icons/icon.png"
+      ]
     },
     "security": {
       "csp": null

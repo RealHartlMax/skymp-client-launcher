@@ -1,0 +1,29 @@
+.settings-layer { position: fixed; inset: 0; z-index: 1100; display: flex; justify-content: flex-end; }
+.settings-backdrop { position: absolute; inset: 0; background: rgba(2, 7, 10, .78); backdrop-filter: blur(5px); }
+.settings-drawer { position: relative; width: min(1060px, 94vw); height: 100%; overflow: auto; background: #101a21; color: #e7ecef; border-left: 1px solid #34454f; box-shadow: -30px 0 100px #0008; padding: clamp(22px, 3vw, 48px); outline: none; }
+.settings-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 34px; }
+.settings-heading h1 { font-size: clamp(32px, 3vw, 44px); margin: 6px 0 0; }
+.settings-close { font-size: 30px; padding: 0 12px; min-height: 44px; color: #d8e2e9; background: #1b2b35; border: 1px solid #34454f; border-radius: 8px; cursor: pointer; }
+.settings-layout { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 38px; }
+.settings-layout nav { display: flex; flex-direction: column; gap: 5px; align-self: start; position: sticky; top: 0; }
+.settings-layout nav button { text-align: left; padding: 14px 16px; background: transparent; border: 1px solid transparent; color: #a9bac5; font: inherit; border-radius: 7px; cursor: pointer; }
+.settings-layout nav button[aria-current] { color: #e5c387; border-color: #706047; background: #c7a87513; }
+.settings-content { min-width: 0; }
+.settings-content h2 { font-family: inherit; font-size: 20px; color: #e5c387; margin: 10px 0 24px; }
+.settings-content h2:focus { outline: none; }
+.setting-block { padding-bottom: 26px; margin-bottom: 25px; border-bottom: 1px solid #2b3b44; }
+.setting-block h3, .setting-block > label { display: block; font-size: 14px; font-weight: 600; color: #dde5eb; margin: 0 0 12px; }
+.setting-block p { font-size: 14px; line-height: 1.7; color: #a8bbc7; margin: 10px 0; }
+.setting-block .settings-account-name { color: #edf1f4; font-size: 21px; }
+.setting-block input:not([type='checkbox']):not([type='range']), .setting-block select { background: #0b141a; border: 1px solid #34454f; border-radius: 6px; min-height: 46px; width: 100%; color: #edf1f4; padding: 10px 13px; font: inherit; margin-bottom: 8px; box-sizing: border-box; }
+.setting-block input[type='range'] { width: 100%; accent-color: #c7a875; margin-bottom: 24px; }
+.setting-block .settings-checkbox { display: flex; gap: 12px; align-items: flex-start; line-height: 1.5; cursor: pointer; }
+.settings-checkbox input { width: 18px; height: 18px; accent-color: #c7a875; margin: 2px 0 0; flex: none; }
+.settings-buttons { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.settings-content code { overflow-wrap: anywhere; display: block; background: #0b141a; border-radius: 6px; padding: 14px; font-size: 13px; }
+.settings-feedback { color: #e5c387; border: 1px solid #706047; background: #c7a8750d; border-radius: 8px; padding: 14px; }
+.settings-content .settings-connection-status[data-connected='true'] { color: #9ecdb9; }
+.settings-content .settings-notice { border-left: 2px solid #c7a875; padding-left: 12px; }
+.settings-drawer button:focus-visible, .settings-drawer input:focus-visible, .settings-drawer select:focus-visible { outline: 2px solid #d4b87e; outline-offset: 3px; }
+@media (max-width: 650px) { .settings-drawer { width: 100%; padding: 22px; } .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; } .settings-layout nav { flex-direction: row; position: static; border-bottom: 1px solid #34454f; padding-bottom: 10px; } .settings-layout nav button { flex: 1; text-align: center; padding: 12px 8px; } .settings-heading { margin-bottom: 20px; } }
+@media (prefers-reduced-motion: reduce) { .settings-backdrop { backdrop-filter: none; } }

@@ -1,44 +1,50 @@
-# 🤝 Contributing to SkyMP Open Launcher
+# Contributing to SkyMP Open Launcher
 
-First of all, thank you for your interest in this project! Every contribution is welcome.
+Checked against the local project on **22 October 2026**. Start with
+[current status](docs/STATUS.md), [developer setup](docs/SETUP.md),
+[server connection](docs/CONNECTING.md) and [PHP hosting](docs/PHP_HOSTING.md).
 
-This document provides guidelines for setting up the development environment.
+## Components
 
-## 💻 Local Development Setup
+- `launcher/`: Tauri 1 / React / TypeScript frontend and Rust preparation backend.
+- `web/`: independent PHP/static webroots. The PHP master uses the existing
+  Manage dashboard's accounts. See the config examples and schemas in those roots.
+- `master-api/`: optional Node.js 24+ / SQLite reference with separate local accounts.
+- The native/in-game SkyMP client and game server are in the separate
+  `skymp` repository. There is no standalone `client-plugin/*.vcxproj` project here.
 
-The project consists of several components. Here's how to set them up:
+## Desktop development
 
-### 🌐 Backend (PHP & MySQL)
+Use Node/npm, a Rust toolchain and the platform's configured Tauri/C++ build
+prerequisites. The local checked toolchain uses Node.js 24 on Windows.
 
-The backend is responsible for managing the server list.
+```powershell
+cd launcher
+npm ci
+npm run build
+npm run test:backend
+npm run tauri dev
+```
 
-1.  **Web Server:** We recommend using a local server environment like **XAMPP** or **WAMP**. This provides you with Apache, PHP, and MySQL/MariaDB in one package.
-2.  **Database:**
-    *   Use the `api-backend-php/servers.sql` file to create the necessary table structure in your MySQL database (e.g., via phpMyAdmin).
-    *   Create a `config.php` file in the `api-backend-php/src/` directory to store your database credentials. Make sure this file is **never** committed to Git.
-3.  **Testing:** Place the PHP files (`heartbeat.php`, `list.php`) in your web server's document root (e.g., `htdocs` in XAMPP) and use a tool like Postman or `curl` to test the API endpoints.
+For a headless Rust-only test, `npm run test:backend` uses
+`--no-default-features --lib`. See [runtime updates](docs/RUNTIME_UPDATES.md)
+for package/catalog tools and `node tests/runtime-packaging.mjs` from the repo root.
+Tests use separate temporary fixtures and must not start Skyrim implicitly.
 
-### 🚀 Frontend (Tauri Launcher)
+## PHP and hosting
 
-The launcher is a desktop application built with Tauri, React, and TypeScript.
+Use the actual `web/api.skymp-worlds.net/` and
+`web/manage.skymp-worlds.net/` paths; the old `api-backend-php/` paths do not exist.
+PHP config files contain deployment-specific values and remain private.
+The upload order, schemas and local isolated PHP checks are documented in
+[PHP_HOSTING.md](docs/PHP_HOSTING.md) and [LOCAL_AND_LIVE.md](docs/LOCAL_AND_LIVE.md).
 
-1.  **Rust:** Install the Rust toolchain via [rustup.rs](https://rustup.rs/). Tauri uses Rust for its backend.
-2.  **Node.js & Yarn:** Install Node.js (which includes npm) and then install Yarn: `npm install -g yarn`.
-3.  **Dependencies:** Navigate to the `launcher/` directory and run `yarn install` to fetch all frontend dependencies.
-4.  **Run:** In the `launcher/` directory, run `yarn tauri dev` to start the launcher in development mode.
+## Validation and changes
 
-### 🎮 Client Plugin (C++)
+Report the exact test/package scope. A build or loopback download is not a
+Skyrim/CEF gameplay result. Keep credentials, server/world data and valid
+original-file backups intact. Do not treat a roadmap checkbox as proof of a
+live deployment; record that acceptance separately.
 
-The client plugin requires the **Skyrim Script Extender (SKSE)** headers and a C++ compiler.
-
-1.  **Visual Studio:** Install Visual Studio with the "Desktop development with C++" workload.
-2.  **SKSE:** Download the source code for the correct version of SKSE for your version of Skyrim and place the headers in the appropriate project directory.
-3.  **Project Setup:** A Visual Studio project file (`.vcxproj`) will be provided in the `client-plugin/` directory (once it's created).
-
-## ✨ Code Style
-
-Please try to adhere to the existing code style in the project. For the frontend, we use Prettier, which should format your code automatically if you have it set up in your editor.
-
-## 🐞 Reporting Bugs & Proposing Features
-
-Please use the **GitHub Issues** tab to report bugs or suggest new features. Use the provided labels to categorize your issue correctly.
+Use existing TypeScript/Rust style and submit focused changes with the relevant
+checks. Bug reports should include component/version, reproduction and redacted logs.

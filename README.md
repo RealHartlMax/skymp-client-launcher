@@ -1,5 +1,39 @@
 # 🛠️ SkyMP Open Launcher Initiative (WIP)
 
+Launcher-Einstellungen mit Spielernamen, Streamer-Modus, Audio, Sprachen und Discord-Aktivitätsstatus:
+[DE / EN / RU](docs/LAUNCHER_SETTINGS.md). Discord-Webanmeldung und ausdrückliche Kontoverknüpfung:
+[DE](docs/DISCORD_SETUP.de.md) · [EN](docs/DISCORD_SETUP.en.md) · [RU](docs/DISCORD_SETUP.ru.md).
+
+Steam-Pflicht für Server r5, Gastzugang ohne Worlds-Konto und Legacy-Login:
+[Steam authentication / Steam-Anmeldung / Вход через Steam](docs/STEAM_AUTHENTICATION.md).
+
+Crashreports mit Datenvorschau, lokalem Export, separater Minidump-Freigabe und geschützter PHP-Verwaltung:
+[Konzept und Umsetzung](docs/CRASH_REPORTS.md) · Einrichtung [DE](docs/CRASH_REPORTS_SETUP.de.md),
+[EN](docs/CRASH_REPORTS_SETUP.en.md), [RU](docs/CRASH_REPORTS_SETUP.ru.md).
+Der eigenständige Entwicklerbereich unter **dev.skymp-worlds.net** empfängt die Berichte
+über die bestehende API und verwendet freigegebene Verwaltungskonten:
+[Einrichtung DE](docs/DEV_PORTAL_SETUP.de.md) · [EN](docs/DEV_PORTAL_SETUP.en.md) · [RU](docs/DEV_PORTAL_SETUP.ru.md).
+Der Launcher fordert native Steam-Tickets an, ohne die Steam-DLL des Spiels zu ersetzen.
+Die aktuelle lokale EXE und die unabhängigen Web-ZIPs liegen in `local-builds/current/`.
+Das separat gebaute Threadpool-Clientpaket wurde aus `D:/GitHub/skymp/build/client-delivery-2026-10-25-threadpool/` übernommen. Ein vollständiger Spieltest bleibt erforderlich.
+
+Launcher-Verbindung zum aktuellen Server-Fork, automatische Dateipruefung/-downloads,
+Serverprofile und lokale Tests: [Verbindungsanleitung](docs/CONNECTING.md).
+Modpakete mit Dateigroesse/SHA-256, Unterverzeichnissen und optionalem Clientpaket
+werden vor dem Spielstart vorbereitet: [Betreiber- und API-Anleitung](docs/MODPACK_PROTOCOL.md).
+Client, SKSE und Address Library lassen sich pro Skyrim-Version über einen externen
+[Versionskatalog aktualisieren](docs/RUNTIME_UPDATES.md), ohne die Launcher-EXE neu zu bauen.
+
+Vollständiges Betreiberhandbuch für `docs.skymp-worlds.net`:
+[Deutsch](docs/SERVER_OWNER_GUIDE.de.md) · [English](docs/SERVER_OWNER_GUIDE.en.md) ·
+[Русский](docs/SERVER_OWNER_GUIDE.ru.md). Eigener statischer Webroot und eigene Domain-ZIP;
+bestehende kompatible Server integrieren oder den [Server-Fork](https://github.com/RealHartlMax/skymp)
+verwenden, jeweils ohne Kompatibilitätsgarantie. Upload: [PHP-Webhosting](docs/PHP_HOSTING.md).
+
+**Status audit: 22 October 2026.** [Completed work and remaining acceptance](docs/STATUS.md).
+The locally built preview is in `local-builds/current/`; game/CEF and live rollout
+are still separate acceptance steps.
+
 [🇩🇪 Deutsch](#-deutsch) · [🇬🇧 English](#-english) · [🇷🇺 Русский](#-русский)
 
 ---
@@ -7,7 +41,7 @@
 ## 🇩🇪 Deutsch
 
 > **ACHTUNG: WORK IN PROGRESS (WIP)**
-> Dieses Projekt befindet sich in der frühen Konzeptions- und Planungsphase. Derzeit gibt es noch keine lauffähige Version für Endnutzer. Wir suchen aktiv nach C++, Web- und Backend-Entwicklern!
+> Eine lokale Preview 0.2.0 mit Serverbrowser, Mod-/Clientpaket-Vorbereitung und PHP-Master ist gebaut und automatisiert geprüft. Die vollständige Skyrim-/CEF-Spielprüfung und öffentliche Betriebsfreigabe stehen noch aus. Beiträge und Tests sind willkommen.
 
 ### 🌟 Die Vision
 
@@ -44,7 +78,7 @@ Wir suchen Unterstützung in folgenden Bereichen:
 ## 🇬🇧 English
 
 > **NOTICE: WORK IN PROGRESS (WIP)**
-> This project is in its early concept and planning phase. There is no working version for end users yet. We are actively looking for C++, web, and backend developers!
+> A local 0.2.0 preview with server browsing, verified mod/client-package preparation and a PHP master has been built and checked. Full Skyrim/CEF gameplay acceptance and public deployment remain open. Contributions and testing are welcome.
 
 ### 🌟 The Vision
 
@@ -99,7 +133,7 @@ skymp-client-launcher/
 ## 🇷🇺 Русский
 
 > **ВНИМАНИЕ: В РАЗРАБОТКЕ (WIP)**
-> Этот проект находится на ранней стадии концептуального планирования. Работающей версии для конечных пользователей пока нет. Мы активно ищем разработчиков на C++, веб и бэкенд!
+> Локальная preview-версия 0.2.0 с браузером серверов, проверенной подготовкой модов/клиента и PHP-мастером собрана и проверена. Полная проверка Skyrim/CEF в игре и публичное развёртывание ещё не завершены. Приглашаем участников и тестировщиков.
 
 ### 🌟 Видение
 
@@ -138,3 +172,11 @@ SkyMP – это впечатляющее техническое достиже�
 - [SkyMP Server Source](https://github.com/RealHartlMax/skymp)
 - [SKSE64 Source](https://github.com/ianpatt/skse64)
 - [FiveM Source (Inspiration)](https://github.com/citizenfx/fivem)
+## PHP hosting and online accounts
+
+See [PHP hosting with independent subdomains](docs/PHP_HOSTING.md) for the five
+separate upload archives, shared CSS, existing dashboard accounts and native server
+authentication. No Node service is required on the PHP webspace. Run
+`node tests/php-master-smoke.mjs` for isolated local HTTP tests. The optional Node
+reference preview is described in [local setup](docs/LOCAL_AND_LIVE.md).
+No demo accounts are created. These commands do not deploy or publish anything.

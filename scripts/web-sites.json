@@ -1,0 +1,9 @@
+[
+  { "directory": "landing-page", "domain": "skymp-worlds.net" },
+  { "directory": "servers.skymp-worlds.net", "domain": "servers.skymp-worlds.net" },
+  { "directory": "manage.skymp-worlds.net", "domain": "manage.skymp-worlds.net" },
+  { "directory": "api.skymp-worlds.net", "domain": "api.skymp-worlds.net" },
+  { "directory": "update.skymp-worlds.net", "domain": "update.skymp-worlds.net" },
+  { "directory": "docs.skymp-worlds.net", "domain": "docs.skymp-worlds.net" },
+  { "directory": "dev.skymp-worlds.net", "domain": "dev.skymp-worlds.net" }
+]

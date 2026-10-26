@@ -1,0 +1,130 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { mkdtemp, mkdir, writeFile, readFile, rm, access } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const temporary = await mkdtemp(path.join(tmpdir(), 'skymp-runtime-publishing-'));
+const client = path.join(temporary, 'client');
+const skse = path.join(temporary, 'skse');
+const root = path.join(temporary, 'published');
+const address = path.join(temporary, 'address/versionlib-1-7-104-0.bin');
+const ui = path.join(temporary, 'game-ui');
+const clientScript = path.join(temporary,'compatible-client.js');
+const checks = [];
+async function put(base, relative, bytes) {
+  const target = path.join(base, relative);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, bytes);
+}
+function run(script, args, ok = true) {
+  const result = spawnSync(process.execPath, [path.join(repo, 'launcher/scripts', script), ...args], { encoding: 'utf8' });
+  if (ok) assert.equal(result.status, 0, result.stderr || result.error?.message);
+  else assert.notEqual(result.status, 0, 'Unsafe/invalid publication unexpectedly succeeded');
+  return result;
+}
+const manifestArgs = (output, includeUi = true) => ['--source', client, '--output', output, '--game-version', '1.7.104.0', '--skse-version', '2.3.1', '--skse-source', skse, '--address-library', address, '--client-script', clientScript, ...(includeUi ? ['--ui-source', ui] : [])];
+try {
+  for (const relative of ['Data/SKSE/Plugins/SkyrimPlatform.dll', 'Data/SKSE/Plugins/MpClientPlugin.dll', 'Data/Platform/Plugins/skymp5-client.js', 'Data/Platform/Distribution/RuntimeDependencies/SkyrimPlatformImpl.dll']) await put(client, relative, 'fixture client');
+  await put(ui, 'index.html', '<script src="build.js"></script>');
+  await put(ui, 'build.js', 'window.skyrimPlatform.sendMessage("front-loaded");');
+  await put(ui, 'assets/icon.svg', '<svg></svg>');
+  await put(ui, 'bundle-size.json', '{"report":true}');
+  await writeFile(clientScript,'compatible client');
+  await put(client, 'Data/Skyrim.esm', 'owned game data must not be published');
+  await put(client, 'Data/Platform/Plugins/skymp5-client-settings.txt', 'private settings');
+  await put(client, 'Data/Platform/Plugins/auth-data-no-load.txt', 'private login');
+  await put(client, 'Data/SKSE/Plugins/versionlib-1-6-1170-0.bin', Buffer.from([2, 0, 0, 0]));
+  await put(skse, 'skse64_loader.exe', 'fixture loader never executed');
+  await put(skse, 'skse64_1_7_104.dll', 'fixture matching SKSE runtime');
+  await put(skse, 'skse64_1_6_1170.dll', 'unrelated SKSE runtime');
+  await put(skse, 'Data/Scripts/SKSEFixture.pex', 'matching SKSE script');
+  await put(skse, 'skse64_readme.txt', 'SKSE documentation\r\noriginal Windows line endings\r\n');
+  await put(path.dirname(address), path.basename(address), Buffer.from([5, 0, 0, 0]));
+  const withoutUi = path.join(root, 'missing-ui');
+  const missing = run('create-runtime-manifest.mjs', manifestArgs(withoutUi, false), false);
+  assert.match(missing.stderr, /incomplete: Data\/Platform\/UI\/index\.html/);
+  checks.push('incomplete client without the multiplayer UI cannot be published');
+  const firstRoot = path.join(root, '1.7.104.0/release-a');
+  run('create-runtime-manifest.mjs', manifestArgs(firstRoot));
+  const first = JSON.parse(await readFile(path.join(firstRoot, 'runtime-manifest.json')));
+  assert.equal(first.gameVersion, '1.7.104.0');
+  assert.equal(first.skseVersion, '2.3.1');
+  assert(first.files.some((file) => file.path === 'Data/Scripts/SKSEFixture.pex'));
+  assert(first.files.some((file) => file.path === 'skse64_1_7_104.dll'));
+  for (const file of ['index.html','build.js','assets/icon.svg']) assert(first.files.some(f => f.path === `Data/Platform/UI/${file}`));
+  assert(!first.files.some(f => f.path.endsWith('bundle-size.json')));
+  checks.push('separate in-game UI build includes the entrypoint, script and nested assets, excluding build reports');
+  assert.equal(await readFile(path.join(firstRoot,'Data/Platform/Plugins/skymp5-client.js'),'utf8'),'compatible client');
+  checks.push('explicit compatible client script overrides the stale source build without modifying it');
+  assert(!first.files.some((file) => /auth-data|settings|Skyrim\.esm|1_6_1170|1-6-1170/.test(file.path)));
+  checks.push('complete version-specific package excludes private and unrelated files');
+  for (const file of first.files) {
+    const bytes = await readFile(path.join(firstRoot, file.path));
+    assert.equal(bytes.length, file.size);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), file.sha256);
+  }
+  checks.push('all published payload sizes and SHA-256 values match');
+  for (const file of first.files.filter(f => /\.(txt|js)$/i.test(f.path))) {
+    assert.equal(file.downloadPath, `payloads/${file.sha256}.bin`);
+    assert.deepEqual(await readFile(path.join(firstRoot, file.downloadPath)), await readFile(path.join(firstRoot, file.path)));
+    if(file.path.endsWith('.txt')) assert((await readFile(path.join(firstRoot, file.downloadPath),'utf8')).includes('\r\n'));
+  }
+  assert(!first.files.find(f => f.path.endsWith('.dll')).downloadPath);
+  checks.push('text files have byte-identical binary transport copies; original install paths and binary files remain unchanged');
+  run('create-runtime-catalog.mjs', ['--root', root, '--manifest', '1.7.104.0/release-a/runtime-manifest.json']);
+  const firstCatalog = JSON.parse(await readFile(path.join(root, 'catalog.json')));
+  await writeFile(clientScript, 'updated compatible client');
+  const secondRoot = path.join(root, '1.7.104.0/release-b');
+  run('create-runtime-manifest.mjs', manifestArgs(secondRoot));
+  run('create-runtime-catalog.mjs', ['--root', root, '--manifest', '1.7.104.0/release-b/runtime-manifest.json', '--replace']);
+  const secondBytes = await readFile(path.join(root, 'catalog.json'));
+  const secondCatalog = JSON.parse(secondBytes);
+  assert.equal(secondCatalog.packages[0].gameVersion, '1.7.104.0');
+  assert.notEqual(firstCatalog.packages[0].sha256, secondCatalog.packages[0].sha256);
+  assert.deepEqual(first, JSON.parse(await readFile(path.join(firstRoot, 'runtime-manifest.json'))));
+  checks.push('stable catalog advances to a new immutable package without altering the previous release');
+  run('create-runtime-catalog.mjs', ['--root', root, '--manifest', '1.7.104.0/release-a/runtime-manifest.json', '--manifest', '1.7.104.0/release-b/runtime-manifest.json', '--replace'], false);
+  run('create-runtime-catalog.mjs', ['--root', root, '--manifest', '../outside.json', '--replace'], false);
+  assert.deepEqual(await readFile(path.join(root, 'catalog.json')), secondBytes);
+  checks.push('ambiguous or escaping catalog entries leave the published catalog intact');
+  run('create-runtime-manifest.mjs', manifestArgs(firstRoot), false);
+  assert.deepEqual(first, JSON.parse(await readFile(path.join(firstRoot, 'runtime-manifest.json'))));
+  checks.push('existing immutable package cannot be overwritten');
+  const denseAddress = Buffer.alloc(96 + 4 * 4);
+  denseAddress.writeUInt32LE(5, 0);
+  [1, 7, 104, 0].forEach((n, i) => denseAddress.writeUInt32LE(n, 4 + i * 4));
+  denseAddress.write('SkyrimSE.exe', 20);
+  denseAddress.writeUInt32LE(8, 84);
+  denseAddress.writeUInt32LE(4, 92);
+  denseAddress.writeUInt32LE(0x1022, 100);
+  denseAddress.writeUInt32LE(0x1072, 108);
+  await writeFile(address, denseAddress);
+  const offsets = path.join(temporary, 'offsets-1-7-104-0.txt');
+  await writeFile(offsets, '1 140001022\n3 140001072\n');
+  const auditedRoot = path.join(root, 'audited-address-library');
+  const audited = run('create-runtime-manifest.mjs', [...manifestArgs(auditedRoot), '--offsets-file', offsets]);
+  assert.equal(JSON.parse(audited.stdout).offsetReference.matchedEntries, 2);
+  const auditedManifest = JSON.parse(await readFile(path.join(auditedRoot, 'runtime-manifest.json')));
+  assert(!auditedManifest.files.some(file => file.path.includes('offsets-')));
+  assert.deepEqual(await readFile(path.join(auditedRoot, 'Data/SKSE/Plugins/versionlib-1-7-104-0.bin')), denseAddress);
+  checks.push('optional complete offset reference is verified without publishing the text list or altering the binary library');
+  await writeFile(offsets, '1 140001023\n3 140001072\n');
+  const rejectedRoot = path.join(root, 'rejected-address-library');
+  const rejected = run('create-runtime-manifest.mjs', [...manifestArgs(rejectedRoot), '--offsets-file', offsets], false);
+  assert.match(rejected.stderr, /Offset mismatch for ID 1/);
+  await assert.rejects(access(rejectedRoot));
+  assert.deepEqual(await readFile(address), denseAddress);
+  checks.push('incorrect offset reference stops publication before creating the output directory and preserves the input library');
+  await writeFile(address, Buffer.from([2, 0, 0, 0]));
+  run('create-runtime-manifest.mjs', manifestArgs(path.join(root, 'bad-library')), false);
+  checks.push('Address Library format must match the chosen Skyrim branch');
+  console.log(JSON.stringify({ ok: true, cases: checks.length, checks, gameStarted: false }, null, 2));
+} finally {
+  const expectedPrefix = path.join(tmpdir(), 'skymp-runtime-publishing-');
+  if (!path.resolve(temporary).startsWith(path.resolve(expectedPrefix))) throw new Error('Refusing unsafe test cleanup');
+  await rm(temporary, { recursive: true, force: true });
+}

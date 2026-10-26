@@ -1,0 +1,27 @@
+.crash-report-backdrop { position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center; padding:1.5rem; background:rgba(4,8,10,.86); backdrop-filter:blur(8px); }
+.crash-report-card { width:min(780px,100%); max-height:calc(100vh - 3rem); overflow:auto; padding:2rem; box-shadow:0 24px 100px #0008; text-align:left; font:var(--font-base,14px)/1.6 var(--font-ui,'Noto Sans',sans-serif); color:var(--text); }
+.crash-report-card h2 { margin:.25rem 0 1rem; font-size:clamp(1.65rem,3vw,2.25rem); }
+.crash-report-card p { line-height:1.6; }
+.crash-report-card > label { display:block; margin:1rem 0; color:var(--text,#e2e8eb); }
+.crash-report-card textarea,.crash-report-card input[type=email] { display:block; width:100%; box-sizing:border-box; margin-top:.45rem; padding:.8rem; font:inherit; color:inherit; background:var(--input); border:1px solid var(--border); border-radius:var(--radius-md,7px); }
+.crash-report-card textarea { resize:vertical; }
+.crash-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; padding:1rem 0; border-block:1px solid var(--border,#30434e); }
+.crash-facts dt,.crash-description,.crash-capture-setting p,.crash-dump-choice p { color:var(--muted); font-size:var(--font-sm,13px); }
+.crash-facts dd { margin:.4rem 0 0; font-size:.95rem; overflow-wrap:anywhere; }
+.crash-checkbox { display:flex; gap:.65rem; align-items:flex-start; font-weight:600; line-height:1.5; }
+.crash-checkbox input { flex:none; width:1.1rem; height:1.1rem; margin-top:.15rem; accent-color:var(--accent,#c7a66f); }
+.crash-privacy,.crash-dump-choice { padding:.8rem 1rem; border-left:3px solid var(--accent,#c7a66f); background:#c7a66f0b; font-size:.9rem; }
+.crash-dump-choice p { margin-bottom:0; }
+.crash-preview { margin:1rem 0; }
+.crash-preview summary { cursor:pointer; color:var(--accent,#c7a66f); }
+.crash-preview pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; font-size:.8rem; padding:1rem; background:#050c10; }
+.crash-capture-setting { border-top:1px solid var(--border,#30434e); margin-top:1.5rem; padding-top:1rem; }
+.crash-capture-setting p { margin-bottom:0; }
+.crash-message,.crash-receipt { color:var(--success,#9fc8b9); overflow-wrap:anywhere; white-space:pre-wrap; }
+.crash-error { color:var(--danger,#ff9a86); overflow-wrap:anywhere; white-space:pre-wrap; }
+.crash-report-list { display:grid; gap:.6rem; }
+.crash-report-row { display:grid; gap:.35rem; text-align:left; padding:1rem; border:1px solid var(--border); background:var(--input); color:inherit; border-radius:var(--radius-md,8px); font:inherit; cursor:pointer; }
+.crash-report-row span { color:var(--muted); font-size:var(--font-sm,13px); }
+.crash-actions { flex-wrap:wrap; position:sticky; bottom:-2rem; z-index:1; background:var(--panel); padding:1rem 0; border-top:1px solid var(--border); box-shadow:0 -10px 16px var(--panel); }
+.crash-report-card :focus-visible { outline:2px solid var(--accent,#c7a66f); outline-offset:3px; }
+@media(max-width:680px) { .crash-report-backdrop { padding:.6rem; } .crash-report-card { padding:1.1rem; max-height:calc(100vh - 1.2rem); } .crash-facts { grid-template-columns:repeat(2,minmax(0,1fr)); } }

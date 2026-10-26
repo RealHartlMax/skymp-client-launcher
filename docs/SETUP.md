@@ -1,5 +1,11 @@
 # SkyMP Launcher - Developer Setup
 
+> Checked 22 October 2026. For the current dashboard-backed PHP master and independent webroots, follow [PHP_HOSTING.md](PHP_HOSTING.md) first. [STATUS.md](STATUS.md) separates local completion from live acceptance. Legacy list/heartbeat schema examples below are compatibility/reference material, not instructions to replace the current dashboard master.
+
+For the current fork's game connection, resource downloads, client runtime packages and
+authentication requirements, see [CONNECTING.md](CONNECTING.md).
+For the current PHP-only webspace and separate domain archives, see [PHP_HOSTING.md](PHP_HOSTING.md).
+
 ## Prerequisites
 
 | Tool | Version | Purpose |
@@ -66,13 +72,15 @@ npm install
 npm run tauri dev
 ```
 
-The launcher now reads server list data from `VITE_SERVER_LIST_URL`.
+The launcher reads the central server list from `https://api.skymp-worlds.net/list.php`.
+This address is fixed. Player settings only ask for the Skyrim Special Edition folder;
+older saved endpoint overrides are discarded. Direct connections to other game servers
+remain available in the server browser.
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_SERVER_LIST_URL` | `https://api.skymp-worlds.net/list.php` | Server list endpoint consumed by launcher |
 | `VITE_VERSION_JSON_URL` | `https://update.skymp-worlds.net/version.json` | Release metadata endpoint consumed by launcher and websites |
 
 ## Launcher-First Integration Model

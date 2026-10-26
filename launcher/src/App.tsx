@@ -1,17 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './App.css';
-
-/** Shape of a server entry returned by the master server. */
-interface ServerEntry {
-  id: string;
-  name: string;
-  ip: string;
-  port: number;
-  players: number;
-  maxPlayers: number;
-  gamemode?: string;
-  countryCode?: string;
-}
+import platform from '../../web/shared/platform.json';
+import ConnectionPanel, { loadProfiles, type ServerConnection } from './ConnectionPanel';
+import ServerBrowser, { ServerDetails, ServerInformation, browserText, type ServerEntry, webUrl } from './ServerBrowser';
+import HomeCards, { homeText } from './HomeCards';
+import { version as launcherVersion } from '../package.json';
+import { open } from '@tauri-apps/api/shell';
+import { invoke } from '@tauri-apps/api/tauri';
+import CrashReports from './CrashReports';
+import LauncherSettings, { type PresenceStatus } from './LauncherSettings';
+import { loadPreferences, savePreferences, privateText, type LauncherPreferences } from './launcherPreferences';
+import { PrivacyContext } from './Privacy';
+import useMenuAudio from './useMenuAudio';
+import { listen } from '@tauri-apps/api/event';
 
 interface ApiServerEntry {
   id?: string;
@@ -24,10 +25,28 @@ interface ApiServerEntry {
   maxPlayers?: number | string;
   gamemode?: string;
   country_code?: string;
+  resourceUrl?: string;
+  resource_url?: string;
+  masterUrl?: string;
+  master?: string;
+  masterKey?: string;
+  offlineMode?: boolean;
+  runtimeSource?: string;
+  server_status?: 'online' | 'offline';
+  last_heartbeat?: string;
+  description?: string;
+  tags?: string[] | string;
+  website?: string;
+  discordUrl?: string;
+  discord_url?: string;
+  bannerUrl?: string;
+  banner_url?: string;
+  iconUrl?: string;
+  icon_url?: string;
 }
 
 type SortMode = 'players_desc' | 'players_asc' | 'name_asc';
-type ActiveTab = 'servers' | 'favorites';
+type ActiveTab = 'servers' | 'favorites' | 'history';
 type AppLanguage = 'de' | 'en' | 'ru';
 type OccupancyFilter = 'all' | 'empty' | 'active' | 'busy';
 type LayoutMode = 'ultra-compact' | 'compact' | 'balanced' | 'wide';
@@ -42,12 +61,14 @@ interface ViewportProfile {
 
 interface SkyrimInstallCheck {
   resolved_path?: string | null;
+  has_game?: boolean;
   has_skse: boolean;
   message: string;
 }
 
 interface SkyrimEnvironmentStatus {
   resolved_path?: string | null;
+  has_game?: boolean;
   has_skse: boolean;
   has_plugins_dir: boolean;
   can_write_plugins: boolean;
@@ -63,9 +84,12 @@ interface ImportedSkympClientSettings {
   master?: string | null;
   server_master_key?: string | null;
   message: string;
+  offline: boolean;
+  profile_id?: number | null;
 }
 
 interface VersionMetadataPayload {
+  available?: boolean;
   version?: string;
   releaseDate?: string;
   channel?: string;
@@ -83,32 +107,37 @@ interface VersionInfo {
   notes: string[];
 }
 
-const DEFAULT_SERVER_LIST_URL = import.meta.env.VITE_SERVER_LIST_URL ?? 'https://api.skymp-worlds.net/list.php';
+const SERVER_LIST_URL = 'https://api.skymp-worlds.net/list.php';
 const DEFAULT_VERSION_JSON_URL = import.meta.env.VITE_VERSION_JSON_URL ?? 'https://update.skymp-worlds.net/version.json';
-const STORAGE_ENDPOINT_KEY = 'skymp.launcher.endpoint';
 const STORAGE_FAVORITES_KEY = 'skymp.launcher.favorites';
 const STORAGE_SKYRIM_DIR_KEY = 'skymp.launcher.skyrimDir';
 const STORAGE_SETUP_DONE_KEY = 'skymp.launcher.setupDone';
 const STORAGE_LANGUAGE_KEY = 'skymp.launcher.language';
-const SKSE_DOWNLOAD_URL = 'https://skse.silverlock.org/';
+const HISTORY_KEY = 'skymp.launcher.history.v1';
+const openExternal = (url: string) => { if (/^https?:\/\//i.test(url)) void open(url).catch(() => window.open(url, '_blank', 'noopener,noreferrer')); };
+
+const addressKey = (server: ServerConnection) => `${server.ip.trim().toLowerCase().replace(/^\[|\]$/g, '')}:${server.port}`;
+const foldSearch = (value: string) => value.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/ß/g, 'ss');
+const browserEntry = (server: ServerConnection & Partial<ServerEntry>): ServerEntry => ({ ...server, id: server.id || addressKey(server), players: server.players || 0, maxPlayers: server.maxPlayers || 0 });
 
 const translations = {
   de: {
-    subtitle: 'Nordisch, direkt, bereit fuer dein naechstes Abenteuer.',
+    subtitle: 'Nordisch, direkt, bereit für dein nächstes Abenteuer.',
     metricServers: 'Server',
     metricPlayers: 'Spieler',
     metricVisible: 'Sichtbar',
     metricSkse: 'SKSE',
     skseReady: 'bereit',
     skseMissing: 'fehlt',
-    endpointPlaceholder: 'Serverlisten-Endpunkt',
-    applyEndpoint: 'Endpunkt speichern',
     refresh: 'Aktualisieren',
-    loading: 'Laedt...',
+    loading: 'Lädt...',
     skyrimDirPlaceholder: 'Skyrim Ordner, z.B. G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
-    checkPath: 'Pfad pruefen',
+    gamePath: 'Spielpfad',
+    gamePathHint: 'Installationsordner von Skyrim Special Edition.',
+    checkingPath: 'Pfad wird geprüft …',
+    checkPath: 'Pfad prüfen',
     importSettings: 'Settings importieren',
-    checkSkse: 'SKSE64 Loader',
+    checkSkse: 'Skyrim Special Edition',
     checkPluginsDir: 'Plugins-Ordner',
     checkPluginsWrite: 'Schreibrechte Plugins',
     checkExistingSettings: 'Vorhandene SkyMP-Settings',
@@ -122,7 +151,7 @@ const translations = {
     filterCountry: 'Land filtern',
     filterOccupancy: 'Auslastung',
     allGamemodes: 'Alle Modi',
-    allCountries: 'Alle Laender',
+    allCountries: 'Alle Länder',
     occupancyAll: 'Alle',
     occupancyEmpty: 'Leer',
     occupancyActive: 'Aktiv',
@@ -135,34 +164,33 @@ const translations = {
     hostOrIp: 'Host oder IP',
     port: 'Port',
     connect: 'Verbinden',
-    setupChoosePath: 'Bitte waehle deinen Skyrim-Installationspfad aus.',
-    invalidHostPort: 'Bitte gueltigen Host und Port eingeben.',
-    endpointInvalid: 'Endpunkt ist ungueltig. Beispiel: https://api.skymp-worlds.net/list.php',
+    setupChoosePath: 'Bitte wähle deinen Skyrim-Installationspfad aus.',
+    invalidHostPort: 'Bitte gültigen Host und Port eingeben.',
     setupTitle: 'Spielpfad einrichten',
     setupBody: 'Beim ersten Start brauchen wir den Installationsordner von Skyrim Special Edition.',
     setupPathPlaceholder: 'z.B. G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
-    setupHint: 'Bitte Pfad waehlen und pruefen.',
+    setupHint: 'Bitte Pfad wählen und prüfen.',
     autoDetect: 'Automatisch erkennen',
     savePath: 'Pfad speichern',
-    skseModalTitle: 'SKSE64 fehlt',
-    skseModalBody: 'Im gewaehlten Ordner wurde keine SKSE64-Installation gefunden. Bitte zuerst SKSE installieren.',
+    skseModalTitle: 'Skyrim nicht gefunden',
+    skseModalBody: 'Bitte den Spieleordner mit SkyrimSE.exe auswählen. Ein vollständiges Clientpaket kann SKSE anschließend automatisch bereitstellen.',
     downloadSkse: 'SKSE herunterladen',
-    choosePathAgain: 'Pfad neu waehlen',
+    choosePathAgain: 'Pfad neu wählen',
     modeLabel: 'Modus',
     modeUnknown: 'n/a',
     countryLabel: 'Land',
-    join: 'Join',
+    join: 'Verbinden',
     joining: 'Verbinde...',
     joinFailed: 'Verbindung fehlgeschlagen',
     languageLabel: 'Sprache',
-    releasePanelTitle: 'Launcher Version',
+    releasePanelTitle: 'Veröffentlichte Version',
     releaseVersionLabel: 'Version',
-    releaseDateLabel: 'Veroeffentlicht',
+    releaseDateLabel: 'Veröffentlicht',
     releaseChannelLabel: 'Kanal',
     releaseNotesLabel: 'Neuerungen',
-    releaseOpenChangelog: 'Changelog oeffnen',
+    releaseOpenChangelog: 'Changelog öffnen',
     releaseDownload: 'Launcher herunterladen',
-    releaseUnavailable: 'Versionsdaten nicht verfuegbar.',
+    releaseUnavailable: 'Versionsdaten nicht verfügbar.',
   },
   en: {
     subtitle: 'Nordic, direct, ready for your next adventure.',
@@ -172,14 +200,15 @@ const translations = {
     metricSkse: 'SKSE',
     skseReady: 'ready',
     skseMissing: 'missing',
-    endpointPlaceholder: 'Server list endpoint',
-    applyEndpoint: 'Apply endpoint',
     refresh: 'Refresh',
     loading: 'Loading...',
     skyrimDirPlaceholder: 'Skyrim folder, e.g. G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
+    gamePath: 'Game path',
+    gamePathHint: 'Installation folder of Skyrim Special Edition.',
+    checkingPath: 'Checking path …',
     checkPath: 'Check path',
     importSettings: 'Import settings',
-    checkSkse: 'SKSE64 loader',
+    checkSkse: 'Skyrim Special Edition',
     checkPluginsDir: 'Plugins directory',
     checkPluginsWrite: 'Plugins write access',
     checkExistingSettings: 'Existing SkyMP settings',
@@ -208,15 +237,14 @@ const translations = {
     connect: 'Connect',
     setupChoosePath: 'Please select your Skyrim installation path.',
     invalidHostPort: 'Please enter a valid host and port.',
-    endpointInvalid: 'Endpoint format is invalid. Example: https://api.skymp-worlds.net/list.php',
     setupTitle: 'Set game path',
     setupBody: 'On first start we need the installation folder of Skyrim Special Edition.',
     setupPathPlaceholder: 'e.g. G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
     setupHint: 'Please choose a path and verify it.',
     autoDetect: 'Auto detect',
     savePath: 'Save path',
-    skseModalTitle: 'SKSE64 missing',
-    skseModalBody: 'No SKSE64 installation was found in the selected folder. Please install SKSE first.',
+    skseModalTitle: 'Skyrim not found',
+    skseModalBody: 'Select the game folder containing SkyrimSE.exe. A complete client package can then install SKSE automatically.',
     downloadSkse: 'Download SKSE',
     choosePathAgain: 'Choose path again',
     modeLabel: 'Mode',
@@ -226,7 +254,7 @@ const translations = {
     joining: 'Joining...',
     joinFailed: 'Failed to join server',
     languageLabel: 'Language',
-    releasePanelTitle: 'Launcher Version',
+    releasePanelTitle: 'Published version',
     releaseVersionLabel: 'Version',
     releaseDateLabel: 'Released',
     releaseChannelLabel: 'Channel',
@@ -243,14 +271,15 @@ const translations = {
     metricSkse: 'SKSE',
     skseReady: 'готово',
     skseMissing: 'нет',
-    endpointPlaceholder: 'Эндпоинт списка серверов',
-    applyEndpoint: 'Применить эндпоинт',
     refresh: 'Обновить',
     loading: 'Загрузка...',
     skyrimDirPlaceholder: 'Папка Skyrim, например G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
+    gamePath: 'Путь к игре',
+    gamePathHint: 'Папка установки Skyrim Special Edition.',
+    checkingPath: 'Проверка пути …',
     checkPath: 'Проверить путь',
     importSettings: 'Импорт настроек',
-    checkSkse: 'SKSE64 загрузчик',
+    checkSkse: 'Skyrim Special Edition',
     checkPluginsDir: 'Папка Plugins',
     checkPluginsWrite: 'Права записи в Plugins',
     checkExistingSettings: 'Существующие настройки SkyMP',
@@ -279,15 +308,14 @@ const translations = {
     connect: 'Подключиться',
     setupChoosePath: 'Выберите путь установки Skyrim.',
     invalidHostPort: 'Введите корректные хост и порт.',
-    endpointInvalid: 'Неверный формат эндпоинта. Пример: https://api.skymp-worlds.net/list.php',
     setupTitle: 'Настройка пути игры',
     setupBody: 'При первом запуске нужен путь к папке Skyrim Special Edition.',
     setupPathPlaceholder: 'например G:/SteamLibrary/steamapps/common/Skyrim Special Edition',
     setupHint: 'Выберите путь и проверьте его.',
     autoDetect: 'Автоопределение',
     savePath: 'Сохранить путь',
-    skseModalTitle: 'SKSE64 не найден',
-    skseModalBody: 'В выбранной папке не найдена установка SKSE64. Сначала установите SKSE.',
+    skseModalTitle: 'Skyrim не найден',
+    skseModalBody: 'Выберите папку игры с SkyrimSE.exe. Полный пакет клиента сможет автоматически установить SKSE.',
     downloadSkse: 'Скачать SKSE',
     choosePathAgain: 'Выбрать путь заново',
     modeLabel: 'Режим',
@@ -313,36 +341,6 @@ type Localization = {
 };
 
 const localizedTranslations: Record<AppLanguage, Localization> = translations;
-
-function normalizeServerListUrl(input: string): string {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return DEFAULT_SERVER_LIST_URL;
-  }
-
-  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  const asUrl = new URL(withProtocol);
-  const pathname = asUrl.pathname.toLowerCase();
-
-  if (pathname.endsWith('/list.php')) {
-    return asUrl.toString();
-  }
-
-  const normalizedPath = asUrl.pathname.endsWith('/') ? asUrl.pathname : `${asUrl.pathname}/`;
-  asUrl.pathname = `${normalizedPath}list.php`.replace(/\/\/+/, '/');
-  asUrl.search = '';
-
-  return asUrl.toString();
-}
-
-function loadSavedEndpoint(): string {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_ENDPOINT_KEY) || '';
-    return normalizeServerListUrl(raw || DEFAULT_SERVER_LIST_URL);
-  } catch {
-    return DEFAULT_SERVER_LIST_URL;
-  }
-}
 
 function loadFavoriteIds(): string[] {
   try {
@@ -438,33 +436,32 @@ function getViewportProfile(): ViewportProfile {
 }
 
 async function tauriInvoke<T>(command: string, args: Record<string, unknown>): Promise<T> {
-  const { invoke } = await import('@tauri-apps/api/tauri');
   return invoke<T>(command, args);
 }
 
 async function checkSkyrimInstall(skyrimDir: string, language: AppLanguage): Promise<SkyrimInstallCheck> {
   return tauriInvoke<SkyrimInstallCheck>('check_skyrim_install_with_language', {
-    skyrim_dir: skyrimDir.trim() || null,
+    skyrimDir: skyrimDir.trim() || null,
     language,
   });
 }
 
 async function checkSkyrimEnvironment(skyrimDir: string, language: AppLanguage): Promise<SkyrimEnvironmentStatus> {
   return tauriInvoke<SkyrimEnvironmentStatus>('check_skyrim_environment_with_language', {
-    skyrim_dir: skyrimDir.trim() || null,
+    skyrimDir: skyrimDir.trim() || null,
     language,
   });
 }
 
 async function importExistingSkympSettings(skyrimDir: string, language: AppLanguage): Promise<ImportedSkympClientSettings> {
   return tauriInvoke<ImportedSkympClientSettings>('import_skymp_settings_with_language', {
-    skyrim_dir: skyrimDir.trim() || null,
+    skyrimDir: skyrimDir.trim() || null,
     language,
   });
 }
 
-async function fetchServerList(serverListUrl: string): Promise<ServerEntry[]> {
-  const res = await fetch(serverListUrl);
+async function fetchServerList(): Promise<ServerEntry[]> {
+  const res = await fetch(SERVER_LIST_URL);
   if (!res.ok) throw new Error(`Server list endpoint responded with ${res.status}`);
 
   const data = await res.json() as ApiServerEntry[];
@@ -480,7 +477,7 @@ async function fetchServerList(serverListUrl: string): Promise<ServerEntry[]> {
       const currentPlayers = Number(item.current_players ?? item.players ?? 0);
       const maxPlayers = Number(item.max_players ?? item.maxPlayers ?? 0);
 
-      if (!name || !ip || !Number.isFinite(port) || port <= 0) {
+      if (!name || !ip || !Number.isInteger(port) || port <= 0 || port > 65535) {
         return null;
       }
 
@@ -493,6 +490,17 @@ async function fetchServerList(serverListUrl: string): Promise<ServerEntry[]> {
         maxPlayers: Number.isFinite(maxPlayers) && maxPlayers > 0 ? maxPlayers : 0,
         gamemode: typeof item.gamemode === 'string' ? item.gamemode.trim() : '',
         countryCode: typeof item.country_code === 'string' ? item.country_code.trim().toUpperCase() : '',
+        resourceUrl: item.resourceUrl ?? item.resource_url,
+        masterUrl: item.masterUrl ?? item.master,
+        serverMasterKey: item.masterKey,
+        offline: item.offlineMode,
+        runtimeSource: item.runtimeSource,
+        serverStatus: item.server_status === 'offline' ? 'offline' : item.server_status === 'online' ? 'online' : undefined,
+        lastHeartbeat: typeof item.last_heartbeat === 'string' ? item.last_heartbeat : undefined,
+        description: typeof item.description === 'string' ? item.description.trim().slice(0, 2000) : '',
+        tags: [...new Set((Array.isArray(item.tags) ? item.tags : typeof item.tags === 'string' ? item.tags.split(',') : []).filter((tag): tag is string => typeof tag === 'string').map(tag => tag.trim().slice(0, 32)).filter(Boolean))].slice(0, 8),
+        website: webUrl(item.website), discordUrl: webUrl(item.discordUrl ?? item.discord_url),
+        bannerUrl: webUrl(item.bannerUrl ?? item.banner_url, true), iconUrl: webUrl(item.iconUrl ?? item.icon_url, true),
       } as ServerEntry;
     })
     .filter((item): item is ServerEntry => item !== null);
@@ -503,6 +511,7 @@ async function fetchVersionMetadata(versionJsonUrl: string, language: AppLanguag
   if (!res.ok) throw new Error(`Version metadata endpoint responded with ${res.status}`);
 
   const payload = await res.json() as VersionMetadataPayload;
+  if (payload.available === false) throw new Error({ de: 'In diesem Kanal ist noch keine Version veröffentlicht.', en: 'No version has been published in this channel yet.', ru: 'В этом канале ещё не опубликована версия.' }[language]);
   const notesByLanguage = payload.changelog ?? {};
   const localizedNotes = notesByLanguage[language] ?? notesByLanguage.en ?? [];
 
@@ -514,19 +523,6 @@ async function fetchVersionMetadata(versionJsonUrl: string, language: AppLanguag
     changelogUrl: String(payload.changelogUrl || ''),
     notes: Array.isArray(localizedNotes) ? localizedNotes.filter((item) => typeof item === 'string').slice(0, 5) : [],
   };
-}
-
-/**
- * Writes connection data via Tauri backend and then launches SKSE.
- */
-async function joinServer(server: ServerEntry, options: { skyrimDir: string }): Promise<void> {
-  await tauriInvoke('join_server', {
-    ip: server.ip,
-    port: server.port,
-    skyrim_dir: options.skyrimDir.trim() || null,
-    master_url: '',
-    server_master_key: null,
-  });
 }
 
 export default function App() {
@@ -543,22 +539,79 @@ export default function App() {
   const [countryFilter, setCountryFilter] = useState('all');
   const [occupancyFilter, setOccupancyFilter] = useState<OccupancyFilter>('all');
   const [favorites, setFavorites] = useState<string[]>(() => loadFavoriteIds());
-  const [serverListUrl, setServerListUrl] = useState(() => loadSavedEndpoint());
-  const [endpointDraft, setEndpointDraft] = useState(() => loadSavedEndpoint());
   const [skyrimDir, setSkyrimDir] = useState(() => loadSkyrimDir());
   const [setupPathDraft, setSetupPathDraft] = useState(() => loadSkyrimDir());
   const [setupStatus, setSetupStatus] = useState('');
+  const [checkingPath, setCheckingPath] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showSkseModal, setShowSkseModal] = useState(false);
   const [skyrimCheck, setSkyrimCheck] = useState<SkyrimInstallCheck | null>(null);
   const [skyrimEnv, setSkyrimEnv] = useState<SkyrimEnvironmentStatus | null>(null);
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
   const [versionError, setVersionError] = useState<string | null>(null);
-  const [directIp, setDirectIp] = useState('');
-  const [directPort, setDirectPort] = useState('');
+  const [selectedServer, setSelectedServer] = useState<ServerEntry | null>(null);
+  const [page, setPage] = useState<'browse' | 'home' | 'details' | 'advanced'>('browse');
+  const [savedProfiles, setSavedProfiles] = useState<ServerConnection[]>(loadProfiles);
+  const browserScroll = useRef(0);
+  const [preparingServer, setPreparingServer] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [preferences, setPreferences] = useState(loadPreferences);
+  const [preferencesStorageError, setPreferencesStorageError] = useState(false);
+  const [presence, setPresence] = useState<PresenceStatus>({ state: 'disabled' });
+  const [playingServer, setPlayingServer] = useState<ServerConnection | null>(null);
+  const [gameRunning, setGameRunning] = useState(false);
+  useMenuAudio(preferences, preparingServer || gameRunning);
+  const updatePreferences = (next: LauncherPreferences) => { setPreferences(next); setPreferencesStorageError(!savePreferences(next)); };
+  const clearHistory = () => { try { localStorage.removeItem(HISTORY_KEY); setHistory([]); return true; } catch { return false; } };
+  const [history, setHistory] = useState<ServerEntry[]>(() => {
+    try { const data: unknown = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      return Array.isArray(data) ? data.filter((p): p is ServerEntry => p && typeof p.name === 'string' && typeof p.ip === 'string' && Number.isInteger(p.port) && p.port > 0 && p.port <= 65535).slice(0, 12) : [];
+    } catch { return []; }
+  });
+  const home = homeText[language];
+  const browser = browserText[language];
+  const allServers = useMemo(() => {
+    const entries = new Map(servers.map(server => [addressKey(server), server]));
+    for (const profile of savedProfiles) if (!entries.has(addressKey(profile))) entries.set(addressKey(profile), browserEntry(profile));
+    return [...entries.values()];
+  }, [servers, savedProfiles]);
+  const detailServer = useMemo(() => selectedServer ? servers.find(server => addressKey(server) === addressKey(selectedServer)) || selectedServer : null, [selectedServer, servers]);
+  const navigate = (next: typeof page) => {
+    if (preparingServer) return;
+    setPage(next);
+    requestAnimationFrame(() => window.scrollTo({ top: next === 'browse' ? browserScroll.current : 0, behavior: 'instant' as ScrollBehavior }));
+  };
+  const browse = (tab: ActiveTab) => { if (!preparingServer) { setActiveTab(tab); navigate('browse'); } };
+  const rememberConnection = (server: ServerConnection) => {
+    setPlayingServer(server); setGameRunning(true);
+    const current = allServers.find(entry => addressKey(entry) === addressKey(server));
+    const entry = browserEntry({ ...current, ...server });
+    const next = [entry, ...history.filter((p) => p.ip !== server.ip || p.port !== server.port)].slice(0, 12);
+    setHistory(next); try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)); } catch { /* Game launch already succeeded. */ }
+  };
   const i18n = localizedTranslations[language];
 
-  const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
+  useEffect(() => {
+    let disposed = false; let stop: (() => void) | undefined;
+    const apply = (state: { phase: string }) => { if (!disposed) setGameRunning(['starting', 'running'].includes(state.phase)); };
+    void listen<{ phase: string }>('game-lifecycle', event => apply(event.payload)).then(unsubscribe => { if (disposed) unsubscribe(); else stop = unsubscribe; }).catch(() => {});
+    void invoke<{ phase: string }>('game_launch_status').then(apply).catch(() => {});
+    return () => { disposed = true; stop?.(); };
+  }, []);
+  useEffect(() => {
+    let disposed = false;
+    void invoke<PresenceStatus>('discord_presence_update', { request: { mode: preferences.discordActivity, streamerMode: preferences.streamerMode, playing: gameRunning, serverName: playingServer?.name || null, language } }).then(value => { if (!disposed) setPresence(value); }).catch(() => {});
+    return () => { disposed = true; };
+  }, [preferences.discordActivity, preferences.streamerMode, gameRunning, playingServer?.name, language]);
+  useEffect(() => {
+    if (!showSettings) return;
+    let disposed = false;
+    const poll = () => { void invoke<PresenceStatus>('discord_presence_status').then(value => { if (!disposed) setPresence(value); }).catch(() => {}); };
+    poll(); const timer = window.setInterval(poll, 2000);
+    return () => { disposed = true; window.clearInterval(timer); };
+  }, [showSettings]);
+
+  const favoriteSet = useMemo(() => new Set([...allServers, ...history, ...(detailServer ? [detailServer] : [])].filter(server => favorites.includes(server.id) || favorites.includes(addressKey(server))).map(server => server.id)), [favorites, allServers, history, detailServer]);
 
   useEffect(() => {
     const handleResize = () => setViewport(getViewportProfile());
@@ -566,20 +619,7 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const appStyle = useMemo(() => {
-    const maxWidth = viewport.layout === 'wide'
-      ? Math.min(1520, Math.max(1280, Math.round(viewport.width * 0.92)))
-      : viewport.layout === 'compact'
-        ? Math.min(980, Math.max(760, Math.round(viewport.width * 0.96)))
-        : viewport.layout === 'ultra-compact'
-          ? Math.min(820, Math.max(640, Math.round(viewport.width * 0.98)))
-          : Math.min(1280, Math.max(980, Math.round(viewport.width * 0.9)));
-
-    return {
-      ['--app-max-width' as string]: `${maxWidth}px`,
-      ['--viewport-height' as string]: `${viewport.height}px`,
-    };
-  }, [viewport]);
+  const appStyle = { ['--viewport-height' as string]: `${viewport.height}px` };
 
   useEffect(() => {
     try {
@@ -591,11 +631,12 @@ export default function App() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_ENDPOINT_KEY, serverListUrl);
+      // Discard overrides saved by older versions; discovery always uses the central API.
+      window.localStorage.removeItem('skymp.launcher.endpoint');
     } catch {
       // Ignore storage errors in restricted environments.
     }
-  }, [serverListUrl]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -633,58 +674,68 @@ export default function App() {
       setSkyrimCheck(status);
       const env = await checkSkyrimEnvironment(savedPath, language);
       setSkyrimEnv(env);
-      if (!status.has_skse) {
+      if (!(status.has_game ?? status.has_skse)) {
         setShowSkseModal(true);
       }
     };
 
-    void initSetup();
+    void initSetup().catch((e) => setError(String(e)));
   }, [language]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchServerList(serverListUrl);
+      const data = await fetchServerList();
       setServers(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
-  }, [serverListUrl]);
+  }, []);
 
   // Initial load
   useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 30000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadVersion = async () => {
       setVersionError(null);
+      setVersionInfo(null);
       try {
-        const data = await fetchVersionMetadata(DEFAULT_VERSION_JSON_URL, language);
-        setVersionInfo(data);
+        const endpoint = new URL(DEFAULT_VERSION_JSON_URL, window.location.href);
+        if (preferences.updateChannel !== 'beta') endpoint.pathname = endpoint.pathname.replace(/[^/]+$/, `channels/${preferences.updateChannel}.json`);
+        const data = await fetchVersionMetadata(endpoint.href, language);
+        if (!cancelled) setVersionInfo(data);
       } catch (e) {
-        setVersionError(e instanceof Error ? e.message : 'Unknown error');
+        if (!cancelled) setVersionError(e instanceof Error ? e.message : 'Unknown error');
       }
     };
 
     void loadVersion();
-  }, [language]);
+    return () => { cancelled = true; };
+  }, [language, preferences.updateChannel]);
 
   const availableGamemodes = useMemo(() => {
-    return Array.from(new Set(servers.map((server) => server.gamemode?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
-  }, [servers]);
+    return Array.from(new Set(allServers.map((server) => server.gamemode?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+  }, [allServers]);
 
   const availableCountries = useMemo(() => {
-    return Array.from(new Set(servers.map((server) => server.countryCode?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
-  }, [servers]);
+    return Array.from(new Set(allServers.map((server) => server.countryCode?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+  }, [allServers]);
 
   const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase();
+    const needle = foldSearch(search.trim());
+    const tokens = needle.split(/\s+/).filter(Boolean);
 
     const baseEntries = activeTab === 'favorites'
-      ? servers.filter((server) => favoriteSet.has(server.id))
-      : servers;
+      ? allServers.filter((server) => favoriteSet.has(server.id))
+      : activeTab === 'history' ? history.map((entry) => allServers.find((live) => addressKey(live) === addressKey(entry)) || entry) : servers;
 
     const entries = baseEntries.filter((server) => {
       if (gamemodeFilter !== 'all' && (server.gamemode || '') !== gamemodeFilter) {
@@ -721,12 +772,18 @@ export default function App() {
         String(server.port),
         server.gamemode || '',
         server.countryCode || '',
-      ].join(' ').toLowerCase();
+        server.description || '', ...(server.tags || []),
+      ].join(' ');
 
-      return searchable.includes(needle);
+      return tokens.every(token => foldSearch(searchable).includes(token));
     });
 
     entries.sort((left, right) => {
+      if (needle) {
+        const rank = (name: string) => { const value = foldSearch(name); return value === needle ? 3 : value.startsWith(needle) ? 2 : value.includes(needle) ? 1 : 0; };
+        const relevance = rank(right.name) - rank(left.name);
+        if (relevance) return relevance;
+      }
       if (sortMode === 'players_asc') {
         return left.players - right.players;
       }
@@ -739,7 +796,7 @@ export default function App() {
     });
 
     return entries;
-  }, [servers, search, hideFullServers, sortMode, favoriteSet, activeTab, gamemodeFilter, countryFilter, occupancyFilter]);
+  }, [allServers, search, hideFullServers, sortMode, favoriteSet, activeTab, gamemodeFilter, countryFilter, occupancyFilter, history]);
 
   const totalPlayers = useMemo(() => servers.reduce((sum, server) => sum + server.players, 0), [servers]);
 
@@ -755,7 +812,7 @@ export default function App() {
     const env = await checkSkyrimEnvironment(skyrimDir, language);
     setSkyrimEnv(env);
 
-    if (!status.has_skse) {
+    if (!(status.has_game ?? status.has_skse)) {
       setShowSkseModal(true);
       return false;
     }
@@ -768,61 +825,42 @@ export default function App() {
     return true;
   }, [skyrimDir, i18n.setupChoosePath, language]);
 
-  const connectDirect = async () => {
-    const ip = directIp.trim();
-    const port = Number(directPort.trim());
-
-    if (!ip || !Number.isFinite(port) || port < 1 || port > 65535) {
-      alert(i18n.invalidHostPort);
-      return;
-    }
-
-    const ready = await ensureSkyrimReady();
-    if (!ready) {
-      return;
-    }
-
-    await joinServer({
-      id: `${ip}:${port}`,
-      name: 'Direct Connect',
-      ip,
-      port,
-      players: 0,
-      maxPlayers: 0,
-    }, {
-      skyrimDir,
-    });
+  const showServerDetails = (server: ServerConnection) => {
+    if (preparingServer) return;
+    if (page === 'browse') browserScroll.current = window.scrollY;
+    setSelectedServer(allServers.find(entry => addressKey(entry) === addressKey(server)) || browserEntry(server));
+    navigate('details');
   };
 
-  const handleJoinServer = useCallback(async (server: ServerEntry) => {
-    const ready = await ensureSkyrimReady();
-    if (!ready) {
-      return;
-    }
-    await joinServer(server, { skyrimDir });
-  }, [skyrimDir, ensureSkyrimReady]);
-
   const verifyAndSavePath = useCallback(async () => {
-    const status = await checkSkyrimInstall(setupPathDraft, language);
-    const env = await checkSkyrimEnvironment(setupPathDraft, language);
-    setSkyrimCheck(status);
-    setSkyrimEnv(env);
-    setSetupStatus(status.message);
+    setCheckingPath(true);
+    setSetupStatus('');
+    try {
+      const status = await checkSkyrimInstall(setupPathDraft, language);
+      const env = await checkSkyrimEnvironment(setupPathDraft, language);
+      setSkyrimCheck(status);
+      setSkyrimEnv(env);
+      setSetupStatus(status.message);
 
-    if (status.has_skse && status.resolved_path) {
-      setSkyrimDir(status.resolved_path);
-      setSetupPathDraft(status.resolved_path);
-      setShowSetupModal(false);
-      setShowSkseModal(false);
-      try {
-        window.localStorage.setItem(STORAGE_SETUP_DONE_KEY, '1');
-      } catch {
-        // ignore
+      if ((status.has_game ?? status.has_skse) && status.resolved_path) {
+        setSkyrimDir(status.resolved_path);
+        setSetupPathDraft(status.resolved_path);
+        setShowSetupModal(false);
+        setShowSkseModal(false);
+        try {
+          window.localStorage.setItem(STORAGE_SETUP_DONE_KEY, '1');
+        } catch {
+          // Ignore storage errors in restricted environments.
+        }
+        return;
       }
-      return;
-    }
 
-    setShowSkseModal(true);
+      setShowSkseModal(true);
+    } catch (error) {
+      setSetupStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCheckingPath(false);
+    }
   }, [setupPathDraft, language]);
 
   const autoDetectPath = useCallback(async () => {
@@ -841,12 +879,11 @@ export default function App() {
     setSetupStatus(imported.message);
 
     if (imported.found) {
-      if (imported.server_ip) {
-        setDirectIp(imported.server_ip);
-      }
-      if (imported.server_port && Number.isFinite(imported.server_port)) {
-        setDirectPort(String(imported.server_port));
-      }
+      if (imported.server_ip && imported.server_port) { setSelectedServer(browserEntry({
+        name: 'Imported SkyMP', ip: imported.server_ip, port: imported.server_port,
+        masterUrl: imported.master ?? '', serverMasterKey: imported.server_master_key ?? '',
+        offline: imported.offline, profileId: imported.profile_id ?? 1,
+      })); setPage('advanced'); }
       if (imported.path) {
         const normalized = (setupPathDraft || skyrimDir).trim();
         if (!normalized && skyrimCheck?.resolved_path) {
@@ -860,7 +897,7 @@ export default function App() {
     return [
       {
         label: i18n.checkSkse,
-        ok: !!skyrimEnv?.has_skse,
+        ok: !!(skyrimEnv?.has_game ?? skyrimEnv?.has_skse),
       },
       {
         label: i18n.checkPluginsDir,
@@ -877,94 +914,72 @@ export default function App() {
     ];
   }, [skyrimEnv, i18n]);
 
-  const applyEndpoint = () => {
-    try {
-      const next = normalizeServerListUrl(endpointDraft);
-      setServerListUrl(next);
-      setEndpointDraft(next);
-    } catch {
-      alert(i18n.endpointInvalid);
-    }
-  };
-
   const toggleFavorite = (serverId: string) => {
+    const server = [...allServers, ...history, ...(detailServer ? [detailServer] : [])].find(entry => entry.id === serverId);
+    const key = server ? addressKey(server) : serverId;
     setFavorites((prev) => {
-      if (prev.includes(serverId)) {
-        return prev.filter((entry) => entry !== serverId);
+      if (prev.includes(serverId) || prev.includes(key)) {
+        return prev.filter((entry) => entry !== serverId && entry !== key);
       }
 
-      return [...prev, serverId];
+      return [...prev, key];
     });
   };
 
   return (
+    <PrivacyContext.Provider value={preferences.streamerMode}>
     <div className="app" data-layout={viewport.layout} style={appStyle}>
       <header className="app-header">
-        <div>
-          <h1>SkyMP Launcher</h1>
-          <p className="subtitle">{i18n.subtitle}</p>
-        </div>
+        <a className="launcher-brand" href="#" aria-label={`SkyMP Worlds · ${browser.home}`} onClick={event => { event.preventDefault(); navigate('home'); }}><span className="brand-mark" aria-hidden="true">S</span><span>SkyMP <b>Worlds</b></span></a>
+        <nav className="main-nav" aria-label="Navigation">
+          <button className={page === 'browse' || page === 'details' ? 'is-current' : ''} onClick={() => browse('servers')} disabled={preparingServer}>{browser.title}</button>
+          <button onClick={() => openExternal('https://skymp-worlds.net/')}>SkyMP.net <span aria-hidden="true">↗</span></button>
+          <button onClick={() => openExternal('https://api.skymp-worlds.net/account')}>{home.account} <span aria-hidden="true">↗</span></button>
+          <button onClick={() => openExternal(platform.communityUrl)}>{home.community} <span aria-hidden="true">↗</span></button>
+        </nav>
+        <div className="header-population"><strong>{totalPlayers.toLocaleString(language)}</strong><span>{i18n.metricPlayers} · {servers.length} {i18n.metricServers}</span></div>
         <div className="lang-row" aria-label={i18n.languageLabel}>
-          <button className={`lang-btn ${language === 'de' ? 'lang-btn-active' : ''}`} onClick={() => setLanguage('de')}>DE</button>
-          <button className={`lang-btn ${language === 'en' ? 'lang-btn-active' : ''}`} onClick={() => setLanguage('en')}>EN</button>
-          <button className={`lang-btn ${language === 'ru' ? 'lang-btn-active' : ''}`} onClick={() => setLanguage('ru')}>RU</button>
+          {(['de', 'en', 'ru'] as const).map((lang) => <button key={lang} className={`lang-btn ${language === lang ? 'lang-btn-active' : ''}`} aria-pressed={language === lang} onClick={() => setLanguage(lang)} disabled={preparingServer}>{lang.toUpperCase()}</button>)}
         </div>
-        <div className="metrics">
-          <div className="metric-box">
-            <span>{i18n.metricServers}</span>
-            <strong>{servers.length}</strong>
-          </div>
-          <div className="metric-box">
-            <span>{i18n.metricPlayers}</span>
-            <strong>{totalPlayers}</strong>
-          </div>
-          <div className="metric-box">
-            <span>{i18n.metricVisible}</span>
-            <strong>{filtered.length}</strong>
-          </div>
-          <div className={`metric-box status-box ${skyrimCheck?.has_skse ? 'status-ok' : 'status-bad'}`}>
-            <span>{i18n.metricSkse}</span>
-            <strong>{skyrimCheck?.has_skse ? i18n.skseReady : i18n.skseMissing}</strong>
-          </div>
-        </div>
+        <button className="btn-refresh settings-toggle" aria-expanded={showSettings} aria-controls="launcher-settings" onClick={() => setShowSettings(!showSettings)} disabled={preparingServer}>{home.settings}</button>
       </header>
-
-      <section className="panel endpoint-panel">
-        <div className="controls">
-          <input
-            type="text"
-            value={endpointDraft}
-            onChange={(event) => setEndpointDraft(event.target.value)}
-            placeholder={i18n.endpointPlaceholder}
-            className="search-input"
-          />
-          <button onClick={applyEndpoint} className="btn-refresh">{i18n.applyEndpoint}</button>
-          <button onClick={refresh} disabled={loading} className="btn-refresh">
-            {loading ? i18n.loading : i18n.refresh}
-          </button>
-        </div>
-        <div className="controls">
-          <input
-            type="text"
-            value={skyrimDir}
-            onChange={(event) => setSkyrimDir(event.target.value)}
-            placeholder={i18n.skyrimDirPlaceholder}
-            className="search-input"
-          />
-          <button onClick={() => void verifyAndSavePath()} className="btn-refresh">{i18n.checkPath}</button>
-          <button onClick={() => void handleImportExistingSettings()} className="btn-refresh">{i18n.importSettings}</button>
-        </div>
-        <div className="checklist-grid">
-          {checklist.map((item) => (
-            <div key={item.label} className={`check-item ${item.ok ? 'check-ok' : 'check-bad'}`}>
-              <span className="check-icon">{item.ok ? '✓' : '✗'}</span>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel release-panel">
+      {showSettings && <LauncherSettings language={language} onLanguage={setLanguage} preferences={preferences} onPreferences={updatePreferences} storageError={preferencesStorageError}
+        path={setupPathDraft} onPath={setSetupPathDraft} onVerify={() => void verifyAndSavePath()} checkingPath={checkingPath} pathStatus={setupStatus || skyrimCheck?.message || ''}
+        savedPath={skyrimDir} onClearHistory={clearHistory} presence={presence} openExternal={openExternal} onClose={() => setShowSettings(false)} />}
+      <div className={`dashboard-layout ${page === 'home' ? '' : 'browser-layout'}`}>
+        <main className="dashboard-main">
+          {page === 'home' && <>
+            <HomeCards language={language} last={history[0]} favorites={favorites.length} disabled={preparingServer}
+              onBrowse={() => browse('servers')} onFavorites={() => browse('favorites')} onHistory={() => browse('history')}
+              onSelect={showServerDetails} />
+            <section className="world-banner"><div><p className="eyebrow">{home.featured}</p><h1>{home.featuredBody}</h1><p>{home.featuredHint}</p>
+              <button className="btn-join" onClick={() => browse('servers')}>{home.browse} <span aria-hidden="true">→</span></button>
+            </div></section>
+          </>}
+          {page === 'browse' && <ServerBrowser language={language} entries={filtered} tab={activeTab} onTab={setActiveTab}
+            query={search} onQuery={setSearch} loading={loading} error={error ? privateText(error, preferences.streamerMode, language) : null} onRefresh={refresh} onSelect={showServerDetails}
+            favorites={favoriteSet} onFavorite={toggleFavorite} disabled={preparingServer} sort={sortMode} onSort={value => setSortMode(value as SortMode)}
+            mode={gamemodeFilter} onMode={setGamemodeFilter} country={countryFilter} onCountry={setCountryFilter}
+            occupancy={occupancyFilter} onOccupancy={value => setOccupancyFilter(value as OccupancyFilter)} hideFull={hideFullServers} onHideFull={setHideFullServers}
+            modes={availableGamemodes} countries={availableCountries} onReset={() => { setGamemodeFilter('all'); setCountryFilter('all'); setOccupancyFilter('all'); setHideFullServers(false); }}
+            onDirect={() => navigate('advanced')} />}
+          {page === 'details' && detailServer && <ServerDetails server={detailServer} language={language} favorite={favoriteSet.has(detailServer.id)}
+            listed={servers.some(server => addressKey(server) === addressKey(detailServer))} onBack={() => navigate('browse')}
+            onFavorite={() => toggleFavorite(detailServer.id)} disabled={preparingServer} />}
+          {page === 'advanced' && <div className="browser-heading direct-connection-heading"><div><p className="eyebrow">SKYMP WORLDS</p><h1>{browser.direct}</h1></div>
+            <div className="controls"><button className="text-button" onClick={() => void handleImportExistingSettings()} disabled={preparingServer}>{i18n.importSettings}</button>
+              <button className="text-button" onClick={() => navigate(detailServer ? 'details' : 'browse')} disabled={preparingServer}>← {detailServer ? browser.backToServer : browser.back}</button></div>
+          </div>}
+          <ConnectionPanel selected={detailServer} skyrimDir={skyrimDir} language={language} playerName={preferences.playerName} mode={page === 'details' && detailServer ? 'player' : page === 'advanced' ? 'advanced' : 'hidden'}
+            ensureReady={ensureSkyrimReady} onBusyChange={setPreparingServer} onConnected={rememberConnection} onOptions={() => navigate('advanced')} onProfilesChange={setSavedProfiles} />
+          {page === 'details' && detailServer && <ServerInformation server={detailServer} language={language} openExternal={openExternal} />}
+        </main>
+        {page === 'home' && <aside className="dashboard-sidebar">
+          <section className={`panel readiness-panel ${(skyrimCheck?.has_game ?? skyrimCheck?.has_skse) ? 'is-ready' : ''}`}>
+            <p className="eyebrow">SKYRIM SPECIAL EDITION</p><h2>{(skyrimCheck?.has_game ?? skyrimCheck?.has_skse) ? home.ready : home.missing}</h2>
+            <p>{home.statusHint}</p><button className="text-button" onClick={() => { setShowSetupModal(true); setSetupPathDraft(skyrimDir); }}>{home.settings} <span aria-hidden="true">→</span></button>
+          </section>
+          <section className="panel release-panel">
         <div className="panel-header">
           <h2>{i18n.releasePanelTitle}</h2>
         </div>
@@ -989,10 +1004,10 @@ export default function App() {
             </div>
             <div className="controls">
               {versionInfo.changelogUrl ? (
-                <button className="btn-refresh" onClick={() => window.open(versionInfo.changelogUrl, '_blank')}>{i18n.releaseOpenChangelog}</button>
+                <button className="btn-refresh" onClick={() => openExternal(versionInfo.changelogUrl)}>{i18n.releaseOpenChangelog}</button>
               ) : null}
               {versionInfo.downloadUrl ? (
-                <button className="btn-join" onClick={() => window.open(versionInfo.downloadUrl, '_blank')}>{i18n.releaseDownload}</button>
+                <button className="btn-join" onClick={() => openExternal(versionInfo.downloadUrl)}>{i18n.releaseDownload}</button>
               ) : null}
             </div>
           </>
@@ -1000,103 +1015,19 @@ export default function App() {
           <p className="empty">{versionError ? `${i18n.errorPrefix}: ${versionError}` : i18n.releaseUnavailable}</p>
         )}
       </section>
+          <section className="panel guide-panel"><p className="eyebrow">{home.notices}</p><h2>{home.account}</h2><p>{home.authHint}</p><button className="text-button" onClick={() => openExternal('https://api.skymp-worlds.net/account')}>{home.account} <span aria-hidden="true">↗</span></button></section>
+          <button className="panel host-panel" onClick={() => openExternal('https://manage.skymp-worlds.net/index.php')}><span className="eyebrow">SKYMP CREATORS</span><strong>{home.host}</strong><span>{home.hostHint}</span><span className="text-button" aria-hidden="true">↗</span></button>
+        </aside>}
+      </div>
 
-      <section className="panel tabs-panel">
-        <div className="tab-row">
-          <button className={`tab-btn ${activeTab === 'servers' ? 'tab-btn-active' : ''}`} onClick={() => setActiveTab('servers')}>
-            {i18n.tabServers}
-          </button>
-          <button className={`tab-btn ${activeTab === 'favorites' ? 'tab-btn-active' : ''}`} onClick={() => setActiveTab('favorites')}>
-            {i18n.tabFavorites}
-          </button>
-        </div>
-      </section>
-
-      <section className="panel filter-panel">
-        <div className="controls controls-grow">
-          <input
-            type="text"
-            placeholder={i18n.searchPlaceholder}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="search-input"
-          />
-
-          <select className="search-input select-input" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
-            <option value="players_desc">{i18n.sortPlayersDesc}</option>
-            <option value="players_asc">{i18n.sortPlayersAsc}</option>
-            <option value="name_asc">{i18n.sortNameAsc}</option>
-          </select>
-
-          <select className="search-input select-input" value={gamemodeFilter} onChange={(event) => setGamemodeFilter(event.target.value)} aria-label={i18n.filterGamemode}>
-            <option value="all">{i18n.allGamemodes}</option>
-            {availableGamemodes.map((value) => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </select>
-
-          <select className="search-input select-input" value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)} aria-label={i18n.filterCountry}>
-            <option value="all">{i18n.allCountries}</option>
-            {availableCountries.map((value) => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </select>
-
-          <select className="search-input select-input" value={occupancyFilter} onChange={(event) => setOccupancyFilter(event.target.value as OccupancyFilter)} aria-label={i18n.filterOccupancy}>
-            <option value="all">{i18n.occupancyAll}</option>
-            <option value="empty">{i18n.occupancyEmpty}</option>
-            <option value="active">{i18n.occupancyActive}</option>
-            <option value="busy">{i18n.occupancyBusy}</option>
-          </select>
-
-          <label className="toggle-pill">
-            <input type="checkbox" checked={hideFullServers} onChange={(event) => setHideFullServers(event.target.checked)} />
-            <span>{i18n.hideFull}</span>
-          </label>
-
-        </div>
-      </section>
-
-      {error && <p className="error">⚠ {i18n.errorPrefix}: {error}</p>}
-
-      <main className="server-list">
-        {!loading && filtered.length === 0 && (
-          <p className="empty">{activeTab === 'favorites' ? i18n.emptyFavorites : i18n.emptyServers}</p>
-        )}
-        {filtered.map(server => (
-          <ServerCard
-            key={server.id}
-            server={server}
-            isFavorite={favoriteSet.has(server.id)}
-            onToggleFavorite={toggleFavorite}
-            onJoin={handleJoinServer}
-            i18n={i18n}
-          />
-        ))}
-      </main>
-
-      <section className="panel direct-connect">
-        <h2>{i18n.directConnect}</h2>
-        <div className="controls">
-          <input
-            type="text"
-            className="search-input"
-            placeholder={i18n.hostOrIp}
-            value={directIp}
-            onChange={(event) => setDirectIp(event.target.value)}
-          />
-          <input
-            type="number"
-            className="search-input"
-            placeholder={i18n.port}
-            min={1}
-            max={65535}
-            value={directPort}
-            onChange={(event) => setDirectPort(event.target.value)}
-          />
-          <button className="btn-join" onClick={connectDirect}>{i18n.connect}</button>
-        </div>
-      </section>
+      <footer className="launcher-footer">
+        <span>SkyMP Worlds · v{launcherVersion} · Skyrim Multiplayer</span>
+        <CrashReports language={language} />
+        <button className="text-button launcher-docs" onClick={() => openExternal(`${platform.docsUrl}?lang=${language}`)}>
+          {{ de: 'Dokumentation für Serverbetreiber', en: 'Server operator documentation', ru: 'Документация для владельцев серверов' }[language]} <span aria-hidden="true">↗</span>
+        </button>
+        <span>Independent worlds. Shared adventures.</span>
+      </footer>
 
       {showSetupModal && (
         <div className="modal-backdrop">
@@ -1104,17 +1035,18 @@ export default function App() {
             <h2>{i18n.setupTitle}</h2>
             <p>{i18n.setupBody}</p>
             <input
-              type="text"
+              type={preferences.streamerMode ? 'password' : 'text'}
               className="search-input"
+              aria-label={i18n.gamePath}
               value={setupPathDraft}
               onChange={(event) => setSetupPathDraft(event.target.value)}
               placeholder={i18n.setupPathPlaceholder}
+              disabled={checkingPath}
             />
-            <p className="modal-hint">{setupStatus || i18n.setupHint}</p>
+            <p className="modal-hint">{privateText(setupStatus || i18n.setupHint, preferences.streamerMode, language)}</p>
             <div className="controls">
-              <button className="btn-refresh" onClick={() => void autoDetectPath()}>{i18n.autoDetect}</button>
-              <button className="btn-refresh" onClick={() => void handleImportExistingSettings()}>{i18n.importSettings}</button>
-              <button className="btn-join" onClick={() => void verifyAndSavePath()}>{i18n.savePath}</button>
+              <button className="btn-refresh" onClick={() => void autoDetectPath()} disabled={checkingPath}>{i18n.autoDetect}</button>
+              <button className="btn-join" onClick={() => void verifyAndSavePath()} disabled={checkingPath}>{checkingPath ? i18n.checkingPath : i18n.savePath}</button>
             </div>
             <div className="checklist-grid">
               {checklist.map((item) => (
@@ -1134,61 +1066,12 @@ export default function App() {
             <h2>{i18n.skseModalTitle}</h2>
             <p>{i18n.skseModalBody}</p>
             <div className="controls">
-              <button className="btn-refresh" onClick={() => window.open(SKSE_DOWNLOAD_URL, '_blank')}>{i18n.downloadSkse}</button>
               <button className="btn-join" onClick={() => { setShowSkseModal(false); setShowSetupModal(true); }}>{i18n.choosePathAgain}</button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-interface ServerCardProps {
-  server: ServerEntry;
-  isFavorite: boolean;
-  onToggleFavorite: (serverId: string) => void;
-  onJoin: (server: ServerEntry) => Promise<void>;
-  i18n: Localization;
-}
-
-function ServerCard({ server, isFavorite, onToggleFavorite, onJoin, i18n }: ServerCardProps) {
-  const [joining, setJoining] = useState(false);
-
-  const handleJoin = async () => {
-    setJoining(true);
-    try {
-      await onJoin(server);
-    } catch (e) {
-      alert(`${i18n.joinFailed}: ${e instanceof Error ? e.message : e}`);
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  return (
-    <div className="server-card">
-      <div className="server-info">
-        <div className="name-row">
-          <h2 className="server-name">{server.name}</h2>
-          <button className={`favorite-btn ${isFavorite ? 'favorite-active' : ''}`} onClick={() => onToggleFavorite(server.id)}>
-            {isFavorite ? '♥' : '♡'}
-          </button>
-        </div>
-        <span className="server-address">{server.ip}:{server.port}</span>
-        <span className="server-tags">
-          {server.gamemode ? `${i18n.modeLabel}: ${server.gamemode}` : `${i18n.modeLabel}: ${i18n.modeUnknown}`}
-          {server.countryCode ? ` | ${i18n.countryLabel}: ${server.countryCode}` : ''}
-        </span>
-      </div>
-      <div className="server-meta">
-        <span className="player-count">
-          {server.players}/{server.maxPlayers || 0}
-        </span>
-        <button onClick={handleJoin} disabled={joining} className="btn-join">
-          {joining ? i18n.joining : i18n.join}
-        </button>
-      </div>
-    </div>
+    </PrivacyContext.Provider>
   );
 }

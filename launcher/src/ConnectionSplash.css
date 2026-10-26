@@ -1,0 +1,37 @@
+.connection-splash { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 28px; overflow: auto; background: rgb(4 8 10 / 90%); }
+.connection-splash-backdrop { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 20%, rgb(199 168 117 / 12%), transparent 65%); pointer-events: none; }
+.connection-splash-card { position: relative; width: min(900px, 100%); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--panel); box-shadow: 0 24px 100px rgb(0 0 0 / 60%); outline: none; }
+.connection-splash-art { height: 220px; position: relative; overflow: hidden; background: var(--bg-void); }
+.connection-splash-art > img { width: 100%; height: 100%; object-fit: cover; object-position: center 36%; }
+.connection-splash-art-shade { position: absolute; inset: 0; background: linear-gradient(transparent, rgb(12 20 25 / 40%) 55%, var(--panel)); }
+.connection-splash-brand { position: absolute; top: 25px; left: 32px; font: 600 22px/1.3 var(--font-display); color: var(--text); text-shadow: 0 2px 12px #000; }
+.connection-splash-brand em { color: var(--accent); font-style: normal; }
+.connection-splash-content { padding: 5px 42px 30px; }
+.connection-splash-content > .eyebrow { margin: 0 0 14px; }
+.connection-splash-server { display: flex; align-items: center; gap: 18px; margin-bottom: 32px; min-width: 0; }
+.connection-splash-logo { display: grid; place-items: center; flex: 0 0 62px; width: 62px; height: 62px; border: 1px solid rgb(199 168 117 / 28%); border-radius: var(--radius-sm); background: linear-gradient(145deg, rgb(199 168 117 / 14%), transparent); color: var(--accent); font: 28px/1 var(--font-display); overflow: hidden; }
+.connection-splash-logo img { width: 100%; height: 100%; object-fit: cover; }
+.connection-splash-server > div { min-width: 0; }
+.connection-splash-server h1 { font: 500 30px/1.25 var(--font-display); color: var(--text); margin: 0 0 6px; overflow-wrap: anywhere; }
+.connection-splash-server p { margin: 0; color: var(--muted); font-size: var(--font-sm); }
+.connection-splash-steps { list-style: none; padding: 0; margin: 0 0 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.connection-splash-steps li { font-size: var(--font-xs); line-height: 1.5; color: var(--muted); }
+.connection-splash-step-bar { display: block; height: 3px; border-radius: 2px; background: var(--border); margin-bottom: 10px; }
+.connection-splash-steps .is-complete .connection-splash-step-bar { background: var(--accent); }
+.connection-splash-steps .is-current { color: var(--text); }
+.connection-splash-steps .is-current .connection-splash-step-bar { background: linear-gradient(90deg, var(--accent), rgb(199 168 117 / 30%)); }
+.connection-splash-download { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px; background: rgb(0 0 0 / 15%); }
+.connection-splash-download-heading { display: flex; justify-content: space-between; gap: 16px; font-size: var(--font-xs); color: var(--muted); }
+.connection-splash-download-heading strong { font-weight: 500; color: var(--text); }
+.connection-splash-filename { margin: 12px 0 14px; color: var(--text); font-size: var(--font-sm); overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
+.connection-splash-download progress { display: block; width: 100%; height: 8px; border: none; border-radius: 8px; overflow: hidden; accent-color: var(--accent); background: var(--border); }
+.connection-splash-download progress::-webkit-progress-bar { background: var(--border); border-radius: 8px; }
+.connection-splash-download progress::-webkit-progress-value { background: var(--accent); border-radius: 8px; }
+.connection-splash-transfer { display: flex; justify-content: space-between; margin-top: 10px; min-height: 20px; font-size: var(--font-xs); color: var(--muted); }
+.connection-splash-transfer strong { color: var(--accent); }
+.connection-splash-footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 23px; }
+.connection-splash-footer p { max-width: 540px; margin: 0; color: var(--muted); font-size: var(--font-xs); line-height: 1.7; }
+.connection-splash-footer button { flex-shrink: 0; }
+@media (max-width: 900px) { .connection-splash { padding: 20px; }.connection-splash-art { height: 170px; }.connection-splash-content { padding: 5px 25px 25px; }.connection-splash-server h1 { font-size: 25px; } }
+@media (max-height: 740px) { .connection-splash-art { height: 130px; }.connection-splash-server { margin-bottom: 22px; }.connection-splash-content { padding-top: 0; } }
+@media (max-width: 560px) { .connection-splash { padding: 12px; }.connection-splash-content { padding: 0 18px 20px; }.connection-splash-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }.connection-splash-footer { align-items: stretch; flex-direction: column; gap: 14px; }.connection-splash-download-heading { flex-wrap: wrap; gap: 4px; } }

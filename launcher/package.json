@@ -1,11 +1,14 @@
 {
   "name": "skymp-launcher",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SkyMP Open Launcher – Server browser and game launcher built with Tauri + React",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test:backend": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --lib",
+    "test:fork": "node scripts/test-fork-connection.mjs",
+    "package:runtime": "node scripts/create-runtime-manifest.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

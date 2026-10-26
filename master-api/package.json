@@ -1,0 +1,14 @@
+{
+  "name": "skymp-worlds-master",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/start.mjs",
+    "test": "node --test test/*.test.mjs",
+    "preview": "node src/preview.mjs"
+  }
+}

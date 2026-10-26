@@ -1,6 +1,6 @@
 [package]
 name = "skymp-launcher"
-version = "0.1.0"
+version = "0.2.0"
 description = "SkyMP Open Launcher – Tauri backend"
 authors = []
 license = ""
@@ -9,12 +9,24 @@ edition = "2021"
 rust-version = "1.70"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "1.5", features = [], optional = true }
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tauri = { version = "1.5", features = ["shell-execute", "fs-write-file"] }
+tauri = { version = "1.5", features = ["shell-execute", "shell-open", "fs-write-file"], optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+sha2 = "0.10"
+crc32fast = "1.4"
+tempfile = "3"
+fs2 = "0.4"
+getrandom = "0.2"
+regex = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.52", features = ["Win32_Foundation", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading", "Win32_System_Kernel", "Win32_System_Memory", "Win32_System_SystemInformation", "Win32_System_Pipes", "Win32_Storage_FileSystem", "Win32_Security"] }
 
 [features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-build"]
 custom-protocol = ["tauri/custom-protocol"]

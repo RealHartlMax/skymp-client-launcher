@@ -12,6 +12,56 @@ permissions:
   contents: read
 
 jobs:
+  runtime-packaging:
+    name: Versioned client package and offset references
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Test Address Library references and package publication
+        run: |
+          node tests/address-offsets.mjs
+          node tests/runtime-packaging.mjs
+
+  php-auth:
+    name: PHP hosting and native sessions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, openssl
+          coverage: none
+      - name: Test independent PHP document roots
+        env:
+          PHP_BINARY: php
+        run: node tests/php-master-smoke.mjs
+      - name: Test crash storage and developer portal
+        env:
+          PHP_BINARY: php
+        run: |
+          node tests/crash-reports.mjs
+          node tests/dev-portal.mjs --webroot-reports
+          node tests/dev-report-storage.mjs
+
+  master-api:
+    name: Online authentication and server sessions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Test auth master
+        working-directory: master-api
+        run: npm test
+
   build:
     name: Build (windows)
     runs-on: windows-latest
@@ -51,3 +101,9 @@ jobs:
         run: |
           Set-Location launcher/src-tauri
           cargo check
+
+      - name: Test server synchronization and restoration
+        shell: pwsh
+        run: |
+          Set-Location launcher/src-tauri
+          cargo test --no-default-features --lib
