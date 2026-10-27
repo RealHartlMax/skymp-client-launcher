@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyMP Worlds Control</title>
+    
+    
+    
+    
+    <link rel="stylesheet" href="assets/worlds.css?v=8de9376aef2a">
+</head>
+<body class="site-shell">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div class="site-layout">
+        <main class="legal-article panel">
+            <p class="eyebrow" id="manage-redirect-eyebrow">Admin Access</p>
+            <h1 id="manage-redirect-title">Redirecting to the admin dashboard...</h1>
+            <p id="manage-redirect-copy">If the redirect does not start automatically, continue to <a class="endpoint-link" href="index.php">index.php</a>.</p>
+        </main>
+    </div>
+
+    <script>
+        const translations = {
+            de: {
+                eyebrow: 'Admin-Zugang',
+                title: 'Weiterleitung zum Admin-Dashboard...',
+                copy: 'Falls die Weiterleitung nicht automatisch startet, fahre bitte mit <a class="endpoint-link" href="index.php">index.php</a> fort.'
+            },
+            en: {
+                eyebrow: 'Admin Access',
+                title: 'Redirecting to the admin dashboard...',
+                copy: 'If the redirect does not start automatically, continue to <a class="endpoint-link" href="index.php">index.php</a>.'
+            },
+            ru: {
+                eyebrow: 'Доступ администратора',
+                title: 'Перенаправляем в админ-панель...',
+                copy: 'Если перенаправление не началось автоматически, продолжай через <a class="endpoint-link" href="index.php">index.php</a>.'
+            }
+        };
+
+        const storedLanguage = localStorage.getItem('skymp_lang');
+        const cookieMatch = document.cookie.match(/(?:^|; )skymp_lang=([^;]*)/);
+        const cookieLanguage = cookieMatch ? decodeURIComponent(cookieMatch[1]) : '';
+        const browserLanguage = (navigator.language || 'en').slice(0, 2).toLowerCase();
+        const language = translations[storedLanguage] ? storedLanguage : (translations[cookieLanguage] ? cookieLanguage : (translations[browserLanguage] ? browserLanguage : 'en'));
+
+        document.documentElement.lang = language;
+        document.getElementById('manage-redirect-eyebrow').textContent = translations[language].eyebrow;
+        document.getElementById('manage-redirect-title').textContent = translations[language].title;
+        document.getElementById('manage-redirect-copy').innerHTML = translations[language].copy;
+
+        const nextUrl = new URL('index.php', window.location.href);
+        nextUrl.searchParams.set('lang', language);
+        window.location.replace(nextUrl.toString());
+    </script>
+<footer class="community-footer" aria-label="SkyMP Worlds"><a class="docs-link" data-platform-docs="footer" href="https://docs.skymp-worlds.net/?lang=en">Documentation <span aria-hidden="true">↗</span></a><a class="docs-link" data-platform-downloads="footer" href="https://update.skymp-worlds.net/index.html?lang=en">Downloads <span aria-hidden="true">↗</span></a><a class="community-link" data-platform-community="footer" href="https://discord.gg/NSXtNNbjuR" target="_blank" rel="noopener noreferrer">SkyMP Discord <span aria-hidden="true">↗</span></a></footer>
+<script src="assets/country-flags.js?v=0c29f00b2b6d" defer></script>
+<script src="<?= e(app_url('assets/password-fields.js?v=b1886b4ff91d')) ?>" defer></script>
+</body>
+</html>

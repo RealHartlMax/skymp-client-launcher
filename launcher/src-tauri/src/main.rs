@@ -709,6 +709,19 @@ fn set_crash_report_language(language:String,reports:tauri::State<'_,CrashReport
 
 struct LauncherReportLock(#[allow(dead_code)] std::fs::File);
 
+#[command]
+fn launcher_account_begin(language:String, account:tauri::State<'_,skymp_launcher::launcher_account::LauncherAccount>)->Result<String,String>{account.begin(&language)}
+#[command]
+async fn launcher_account_status(account:tauri::State<'_,skymp_launcher::launcher_account::LauncherAccount>)->Result<skymp_launcher::launcher_account::AccountStatus,String>{
+    let account=account.inner().clone();tauri::async_runtime::spawn_blocking(move||account.status()).await.map_err(|_|"accountUnavailable")?
+}
+#[command]
+fn launcher_account_cancel(account:tauri::State<'_,skymp_launcher::launcher_account::LauncherAccount>)->Result<(),String>{account.cancel()}
+#[command]
+async fn launcher_account_logout(account:tauri::State<'_,skymp_launcher::launcher_account::LauncherAccount>)->Result<skymp_launcher::launcher_account::AccountStatus,String>{
+    let account=account.inner().clone();tauri::async_runtime::spawn_blocking(move||account.logout()).await.map_err(|_|"accountUnavailable")?
+}
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -726,7 +739,7 @@ fn main() {
             let lock=reports.start_launcher().map_err(|error|std::io::Error::new(std::io::ErrorKind::Other,error))?;
             app.manage(LauncherReportLock(lock));
             let session = GameSession::new(directory);
-            session.record("launcher started version=0.2.0");
+            session.record(&format!("launcher started version={}",env!("CARGO_PKG_VERSION")));
             let panic_session = session.clone();
             let panic_reports=reports.clone();
             let previous_hook = std::panic::take_hook();
@@ -745,6 +758,7 @@ fn main() {
             }));
             app.manage(session);
             app.manage(DiscordPresence::new());
+            app.manage(skymp_launcher::launcher_account::LauncherAccount::new());
             let retry_reports=reports.clone();let retry_app=app.handle();
             std::thread::spawn(move || {
                 // Never retries a draft or adds an attachment without prior consent.
@@ -770,6 +784,10 @@ fn main() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            launcher_account_begin,
+            launcher_account_status,
+            launcher_account_cancel,
+            launcher_account_logout,
             game_launch_status,
             steam_account,
             discord_presence_update,

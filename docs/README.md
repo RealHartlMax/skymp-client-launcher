@@ -1,6 +1,6 @@
 # Dokumentation / Documentation / Документация
 
-Stand: **26.10.2026**, Launcher **0.2.0**. Beginne mit dem Abschnitt für deine Aufgabe. Die README beschreibt den Launcher; die technischen Verträge stehen in den jeweiligen Fachanleitungen.
+Stand: **26.10.2026**, Launcher **0.2.1**. Beginne mit dem Abschnitt für deine Aufgabe. Die README beschreibt den Launcher; die technischen Verträge stehen in den jeweiligen Fachanleitungen.
 
 ## Spieler / Players / Игроки
 
@@ -18,6 +18,7 @@ Stand: **26.10.2026**, Launcher **0.2.0**. Beginne mit dem Abschnitt für deine 
 | --- | --- |
 | Toolchain, gemeinsam genutzte Build-Assets und lokaler Start | [Entwicklung](DEVELOPMENT.md) |
 | EXE, portables ZIP, Prüfsummen und manueller GitHub-Upload | [Release-Anleitung DE/EN/RU](RELEASING.md) |
+| Defender-Erkennung, Dateiprüfsumme und Windows-Codesignierung | [Antivirus-Befund und Release-Prüfung](ANTIVIRUS.md) |
 | Komponenten und Datenflüsse | [Architektur](ARCHITECTURE.md) |
 | Einstieg nach Rolle | [Einrichtung](SETUP.md) |
 | Aktueller Nachweis und offene Abnahmen | [Status](STATUS.md), [Live-Abnahme](LIVE_ROLLOUT_CHECKLIST.md) |
@@ -38,10 +39,10 @@ Stand: **26.10.2026**, Launcher **0.2.0**. Beginne mit dem Abschnitt für deine 
 - Crashreport-Kurzanleitung: [DE](CRASH_REPORTS_SETUP.de.md), [EN](CRASH_REPORTS_SETUP.en.md), [RU](CRASH_REPORTS_SETUP.ru.md).
 - Discord-Webanmeldung: [DE](DISCORD_SETUP.de.md), [EN](DISCORD_SETUP.en.md), [RU](DISCORD_SETUP.ru.md).
 
-Der Launcher läuft auf dem Spieler-PC, die Webseiten auf PHP-Webhosting und der Gameserver auf dem VPS. Jeder Bereich hat eigene Pakete. Für einen GitHub-Launcher-Release werden nur EXE, portables ZIP und `SHA256SUMS` hochgeladen.
+Der Launcher läuft auf dem Spieler-PC, die Webseiten auf PHP-Webhosting und der Gameserver auf dem VPS. Jeder Bereich hat eigene Pakete. Für einen GitHub-Launcher-Release werden EXE, Full-ZIP, Update-ZIP und `SHA256SUMS` hochgeladen.
 
-The launcher, PHP websites, game server and native client runtime are separate deliverables. The release guide identifies the exact three GitHub assets. Build success, a user-reported game session and production acceptance are recorded separately.
+The launcher, PHP websites, game server and native client runtime are separate deliverables. The release guide identifies the four GitHub assets. Build success, a user-reported game session and production acceptance are recorded separately.
 
-Лаунчер, PHP-сайты, игровой сервер и нативная среда клиента публикуются отдельно. Для релиза лаунчера на GitHub нужны только EXE, portable ZIP и `SHA256SUMS`. Результаты сборки, пользовательская игровая проверка и проверка боевых сервисов различаются.
+Лаунчер, PHP-сайты, игровой сервер и нативная среда клиента публикуются отдельно. Для релиза лаунчера на GitHub нужны EXE, Full ZIP, Update ZIP и `SHA256SUMS`. Результаты сборки, пользовательская игровая проверка и проверка боевых сервисов различаются.
 
 Community: [Discord](https://discord.gg/NSXtNNbjuR).

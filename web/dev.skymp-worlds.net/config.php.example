@@ -1,0 +1,20 @@
+<?php
+// Copy to config.php. See setup/SETUP.de.md (also EN/RU). Configure in the PHP webhosting panel.
+define('DEV_PUBLIC_URL', 'https://dev.skymp-worlds.net');
+define('DEV_MANAGE_PUBLIC_URL', 'https://manage.skymp-worlds.net');
+define('DEV_SESSION_NAME', 'skymp_dev_session');
+// Same random secret (at least 32 characters) as MANAGE_DEV_SSO_SECRET.
+define('DEV_SSO_SECRET', '');
+// Protected reports/ folder in THIS DEV webroot. Created automatically; PHP must be able to write.
+// PHP envelopes protect every data file; .htaccess additionally blocks direct access on Apache.
+// An absolute private path outside ALL public webroots is also supported (legacy raw format).
+// This is a filesystem path, not a URL or a path on the game VPS. See setup/SETUP.en.md (also de/ru).
+define('DEV_CRASH_DIRECTORY', __DIR__ . '/reports');
+// Separate random service secret: same value as API_CRASH_PROXY_TOKEN.
+define('DEV_CRASH_PROXY_TOKEN', '');
+define('DEV_CRASH_MAX_DUMP_BYTES', 128 * 1024 * 1024);
+define('DEV_CRASH_QUOTA_BYTES', 2 * 1024 * 1024 * 1024);
+define('DEV_CRASH_MAX_REPORTS', 10000);
+define('DEV_CRASH_HOURLY_LIMIT', 20);
+define('DEV_CRASH_RETENTION_DAYS', 90);
+define('DEV_CRASH_DUMP_RETENTION_DAYS', 30);

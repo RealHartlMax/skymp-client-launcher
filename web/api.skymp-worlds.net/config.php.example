@@ -1,0 +1,50 @@
+<?php
+// api.skymp-worlds.net/config.php.example
+
+/**
+ * Database Configuration Example
+ * 
+ * 1. RENAME this file to `config.php`.
+ * 2. FILL IN your actual database credentials.
+ * 3. IMPORTANT: Make sure `config.php` is listed in your .gitignore file
+ *    so you NEVER commit your database secrets to the repository.
+ */
+
+// Database host (e.g., 'localhost' or '127.0.0.1')
+define('DB_HOST', 'localhost');
+
+// Database name
+define('DB_NAME', 'skymp_masterlist');
+
+// Database user
+define('DB_USER', 'root');
+
+// Database password
+define('DB_PASS', '');
+
+// Independent document root: communicate with the management site over HTTPS.
+// No relative filesystem path to the management folder is required.
+define('API_MANAGE_PUBLIC_URL', 'https://manage.skymp-worlds.net');
+
+// Minutes a server is considered active in list.php after its last heartbeat.
+define('API_ACTIVE_INTERVAL_MINUTES', 5);
+
+// All native and /heartbeat.php requests use the dashboard-backed master by default.
+// Only enable this for a deliberate migration of the previous standalone registry.
+define('API_LEGACY_HEARTBEATS', false);
+
+// Legacy-only options below do not register new dashboard servers.
+define('API_ALLOW_HEARTBEAT_REGISTRATION', false);
+
+// Optional shared secret for auto-registration requests. Leave empty to disable token check.
+// If set, heartbeat payload must include: { "registration_token": "..." }.
+define('API_HEARTBEAT_REGISTRATION_TOKEN', 'change-me-before-enabling-auto-registration');
+
+// Crash uploads go to the independent developer webroot. Game/account routes still use API_MANAGE_PUBLIC_URL.
+define('API_CRASH_PUBLIC_URL', 'https://dev.skymp-worlds.net');
+// Use the SAME random service secret as DEV_CRASH_PROXY_TOKEN in the developer config.
+// Empty disables upload; clients never receive this secret.
+define('API_CRASH_PROXY_TOKEN', '');
+define('API_CRASH_MAX_DUMP_BYTES', 128 * 1024 * 1024);
+
+?>

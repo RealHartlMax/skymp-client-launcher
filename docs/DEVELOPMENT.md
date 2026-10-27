@@ -1,12 +1,12 @@
 # Launcher entwickeln und bauen
 
-Stand: **26.10.2026**, Version **0.2.0**. Dieses Dokument beschreibt den Desktop-Launcher. Native Spiel-DLLs und der Gameserver werden im separaten Server-Fork gebaut.
+Stand: **26.10.2026**, Version **0.2.1**. Dieses Dokument beschreibt den Desktop-Launcher. Native Spiel-DLLs und der Gameserver werden im separaten Server-Fork gebaut.
 
 ## Voraussetzungen und Quellumfang
 
 Die zuletzt geprüfte Windows-Umgebung verwendet Node.js **24.19.0**, npm **11.17.0** und Rust/Cargo **1.95.0**. Benötigt werden außerdem die Windows-C++-Buildwerkzeuge und Microsoft Edge WebView2 Runtime für Tauri. Die Abhängigkeiten werden durch `launcher/package-lock.json` und `launcher/src-tauri/Cargo.lock` festgelegt.
 
-Wichtig bei einem frischen Git-Checkout: Die aktuelle `.gitignore` schließt `web/**` aus. Der Launcher benötigt daraus trotzdem öffentliche gemeinsame Build-Assets:
+Der Quellstand enthält jetzt die öffentlichen gemeinsamen Build-Assets sowie die für Konto-/Reporttests benötigten öffentlichen PHP-Quellen. Der Launcher verwendet:
 
 ```text
 web/shared/platform.json
@@ -15,9 +15,9 @@ web/shared/fonts/             # Schriftdateien und Lizenz
 web/shared/flags/countries.json
 ```
 
-Diese Dateien müssen aus einer vollständigen Projekt-Quellkopie bereitstehen. Ein reiner Checkout ohne diese Assets ist derzeit kein vollständiger Launcher-Buildstand. Leere Ersatzdateien oder ein lokaler Dummy-Endpunkt sind kein Ersatz. Die Veröffentlichung dieser Build-Eingaben als regulärer Quellbestand ist als Verbesserung in der [Roadmap](../ROADMAP.md) erfasst.
+Diese öffentlichen Dateien gehören zum getaggten Buildstand. Private Hosting-Konfigurationen und Laufzeitdaten sind keine Build-Eingaben. Weil neue Webdateien weiterhin grundsätzlich ignoriert werden, neue öffentliche Quelldateien nach Prüfung explizit aufnehmen. Leere Ersatzdateien oder Dummy-Endpunkte ersetzen keine echten Build-Assets.
 
-Die Webanwendungen selbst und ein laufender PHP-/Node-Master sind für das Kompilieren des Launchers nicht nötig. Für PHP-Tests werden die jeweiligen lokalen Webquellen zusätzlich benötigt.
+Ein laufender PHP-/Node-Master ist zum Kompilieren nicht nötig. Die PHP-Tests verwenden isolierte temporäre Kopien der öffentlichen API-/Manage-/DEV-Quellen und eigene Testkonten.
 
 ## Lokal starten
 
@@ -69,6 +69,6 @@ Vor einem Commit `git diff --check` und die zur Änderung passenden Prüfungen a
 
 ## English / Русский
 
-Build only the launcher with `npm ci`, `npm run build`, `npm run test:backend` and `npm run tauri -- build` inside `launcher/`. The release executable is `SkyMP Launcher.exe`; it embeds the frontend. A clean Git clone currently lacks ignored `web/shared` build assets, which must be supplied from the full project sources. This is separate from running a PHP backend or building the native game runtime.
+Build only the launcher with `npm ci`, `npm run build`, `npm run test:backend` and `npm run tauri -- build` inside `launcher/`. The release executable is `SkyMP Launcher.exe`; it embeds the frontend. The tagged sources include public shared build inputs and the isolated PHP test sources. This is separate from running a PHP backend or building the native game runtime.
 
-Для сборки лаунчера выполните в `launcher/`: `npm ci`, `npm run build`, `npm run test:backend`, `npm run tauri -- build`. Результат — `SkyMP Launcher.exe` со встроенным интерфейсом. В чистом Git-клоне сейчас отсутствуют игнорируемые общие ресурсы `web/shared`; нужна полная исходная копия проекта. PHP-сервис и сборка нативного игрового клиента для компиляции лаунчера не требуются.
+Для сборки лаунчера выполните в `launcher/`: `npm ci`, `npm run build`, `npm run test:backend`, `npm run tauri -- build`. Результат — `SkyMP Launcher.exe` со встроенным интерфейсом. Исходники тега включают публичные ресурсы web/shared и PHP для изолированных тестов. PHP-сервис и сборка нативного игрового клиента для компиляции лаунчера не требуются.

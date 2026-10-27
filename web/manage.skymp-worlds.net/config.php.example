@@ -1,0 +1,70 @@
+<?php
+/**
+ * Management dashboard configuration example.
+ *
+ * 1. Copy this file to `config.php`.
+ * 2. Adjust the paths and URLs for your deployment.
+ * 3. Fill in Discord OAuth secrets when you are ready to use OAuth sign-in.
+ */
+
+define('MANAGE_APP_NAME', 'SkyMP Worlds Control');
+define('MANAGE_PUBLIC_URL', 'https://manage.skymp-worlds.net');
+define('MANAGE_BASE_PATH', '');
+define('MANAGE_SESSION_NAME', 'skymp_manage_session');
+define('MANAGE_STORAGE_FILE', __DIR__ . '/storage/state.json');
+define('MANAGE_DEMO_LOGIN_ENABLED', false);
+define('MANAGE_EMAIL_REGISTRATION_ENABLED', true);
+define('MANAGE_EMAIL_VERIFICATION_REQUIRED', false);
+define('MANAGE_MAX_SERVERS_PER_USER', 2);
+
+define('MANAGE_PUBLIC_SERVER_BROWSER_URL', 'https://servers.skymp-worlds.net/');
+define('MANAGE_API_HEARTBEAT_URL', 'https://api.skymp-worlds.net/heartbeat.php');
+define('MANAGE_API_SERVER_LIST_URL', 'https://api.skymp-worlds.net/list.php');
+// Public native master origin; all game clients and server settings use this URL.
+define('MANAGE_GAME_MASTER_URL', 'https://api.skymp-worlds.net');
+// Prefer an absolute private directory outside all public document roots.
+// The fallback below is protected by storage/.htaccess on Apache.
+define('MANAGE_GAME_AUTH_DIRECTORY', __DIR__ . '/storage/game-auth');
+define('MANAGE_GAME_ALLOW_PRIVATE_RESOURCES', false);
+define('MANAGE_SYNC_REGISTRY_ON_SAVE', false);
+define('MANAGE_HEARTBEAT_REGISTRATION_TOKEN', '');
+
+define('MANAGE_DISCORD_CLIENT_ID', '1496895150322876555');
+define('MANAGE_DISCORD_CLIENT_SECRET', '');
+define('MANAGE_DISCORD_REDIRECT_URI', 'https://manage.skymp-worlds.net/oauth/discord-callback.php');
+
+define('MANAGE_DB_ENABLED', false);
+define('MANAGE_DB_HOST', '127.0.0.1');
+define('MANAGE_DB_PORT', 3306);
+define('MANAGE_DB_NAME', 'skymp_manage');
+define('MANAGE_DB_USER', 'skymp_manage');
+define('MANAGE_DB_PASSWORD', 'replace-with-real-password');
+define('MANAGE_DB_CHARSET', 'utf8mb4');
+
+define('MANAGE_MAILER_DRIVER', 'smtp');
+define('MANAGE_SMTP_HOST', 'smtp.example.com');
+define('MANAGE_SMTP_PORT', 587);
+define('MANAGE_SMTP_ENCRYPTION', 'tls');
+define('MANAGE_SMTP_USERNAME', 'no-reply@example.com');
+define('MANAGE_SMTP_PASSWORD', 'replace-with-real-password');
+define('MANAGE_MAIL_FROM_ADDRESS', 'no-reply@example.com');
+define('MANAGE_MAIL_FROM_NAME', 'SkyMP Worlds Control');
+define('MANAGE_MAIL_REPLY_TO', 'support@example.com');
+
+// Legacy management-local crash storage; the dedicated DEV portal uses DEV_CRASH_* instead.
+// MANAGE_CRASH_REPORT_ADMINS below remains the developer account allowlist.
+// Read docs/CRASH_REPORTS_SETUP.de.md (also available in English and Russian).
+define('MANAGE_CRASH_DIRECTORY', '');
+define('MANAGE_CRASH_PROXY_TOKEN', ''); // Legacy receiver only; API_CRASH_PROXY_TOKEN now matches DEV_CRASH_PROXY_TOKEN.
+define('MANAGE_CRASH_REPORT_ADMINS', []); // Explicit account IDs; never all server owners.
+define('MANAGE_CRASH_MAX_DUMP_BYTES', 128 * 1024 * 1024);
+define('MANAGE_CRASH_QUOTA_BYTES', 2 * 1024 * 1024 * 1024);
+define('MANAGE_CRASH_MAX_REPORTS', 10000);
+define('MANAGE_CRASH_HOURLY_LIMIT', 20);
+define('MANAGE_CRASH_RETENTION_DAYS', 90);
+define('MANAGE_CRASH_DUMP_RETENTION_DAYS', 30);
+
+// Dedicated developer portal. Keep MANAGE_CRASH_REPORT_ADMINS as the explicit account allowlist.
+// Use a separate random secret (at least 32 characters), matching DEV_SSO_SECRET.
+define('MANAGE_DEV_PUBLIC_URL', 'https://dev.skymp-worlds.net');
+define('MANAGE_DEV_SSO_SECRET', '');

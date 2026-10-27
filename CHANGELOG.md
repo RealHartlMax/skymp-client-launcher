@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-10-26
+
+### Changed
+
+- Added browser-confirmed SkyMP Worlds account sign-in, bounded profile display, separate profile-only sessions and local sign-out in Settings; session tokens stay in Rust/Windows Credential Manager.
+- Steam account lookup runs automatically and its result survives closing/reopening Settings during the launcher session.
+- A global update notice and manual Settings check compare semantic versions against published stable GitHub releases and the release catalog, with startup/periodic/focus checks.
+- Added separate Full/Update portable launcher packages and DE/EN/RU release texts; both ZIPs carry the identical launcher executable.
+- Included the public shared build inputs and PHP sources needed to reproduce the account/report checks from the tagged source.
+- Windows crash reports resolve redirected Documents and collect allowlisted system information through native Windows APIs, without starting PowerShell or WMI child processes.
+- Added Authenticode inspection and SHA-256/RFC 3161 signing tools for an existing trusted code-signing certificate.
+- Automated releases now reject unsigned or untimestamped executables before packaging. A signing provider must be configured first.
+- Automated release ZIPs contain only the launcher executable; Cargo caches, development tools, fixtures and symbols are excluded. Checksums cover the final EXE and ZIP.
+
+### Defender investigation
+
+- Reproduced `Trojan:Win32/Bearfoos.A!ml` on an older 0.2.0 executable. The differently hashed 0.2.0 GitHub asset passed the same local custom scan with file exclusions ignored and remediation disabled.
+- This evidence does not establish that PowerShell caused the detection or guarantee other Defender versions, cloud decisions, SmartScreen or future builds. Each final release binary needs its own validation; see [ANTIVIRUS.md](docs/ANTIVIRUS.md).
+
 ## [0.2.0] - 2026-10-26
 
 ### Added

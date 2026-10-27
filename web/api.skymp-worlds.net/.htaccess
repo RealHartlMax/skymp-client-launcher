@@ -1,0 +1,21 @@
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js .json
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|css)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
+Options -Indexes
+RewriteEngine On
+# Preserve bearer tokens when PHP runs behind CGI/FastCGI.
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteRule ^account/?$ account.php [END]
+RewriteRule ^api/servers/?$ api/servers/index.php [END]
+RewriteRule ^(?:health|api/users/.*|api/servers(?:/.*)?)$ native.php [END]
+<FilesMatch "^(config\.php|.*\.(sql|sqlite|key))$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_mime.c>
+    AddType font/woff2 .woff2
+</IfModule>

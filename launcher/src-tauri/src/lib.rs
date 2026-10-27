@@ -7,3 +7,7 @@ pub mod discord_presence;
 pub mod steam_auth;
 pub mod crash_reports;
 pub mod crash_capture;
+pub mod launcher_account;
+
+#[cfg(windows)]
+mod windows_diagnostics;

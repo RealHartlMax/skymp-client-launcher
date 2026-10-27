@@ -1,0 +1,80 @@
+/* Canonical tokens, typography and controls for all webroots and the launcher. */
+@import url('./fonts/fonts.css');
+
+:root {
+    color-scheme: dark;
+    font-synthesis: none;
+    --font-ui: 'Noto Sans', 'Segoe UI', Arial, sans-serif;
+    --font-display: 'Noto Serif', Georgia, serif;
+    --font-mono: Consolas, 'Liberation Mono', monospace;
+    --font-xs: 12px;
+    --font-sm: 13px;
+    --font-base: 14px;
+    --font-lg: 16px;
+    --font-xl: 18px;
+    --heading-sm: 22px;
+    --heading-md: 28px;
+    --heading-lg: clamp(30px, 3.2vw, 44px);
+    --heading-hero: clamp(36px, 4.3vw, 58px);
+    --bg-void: #0b1014;
+    --bg-stone: #111920;
+    --bg-ember: #1b2a33;
+    --panel: #141e26;
+    --panel-strong: #1a2832;
+    --panel-hover: #20303b;
+    --panel-inner: #ffffff08;
+    --input: #0e161d;
+    --border: #34434e;
+    --panel-border: #34434e;
+    --text: #e8edef;
+    --muted: #a7b4bc;
+    --subtle: #91a1ac;
+    --accent: #c7a875;
+    --accent-strong: #e1c99f;
+    --accent-cool: #aac2ce;
+    --on-accent: #172028;
+    --accent-soft: #c7a87518;
+    --accent-border: #c7a87566;
+    --danger: #f0aaa0;
+    --success: #9ac8b0;
+    --warning: #e1c99f;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+    --control-height: 42px;
+    --shadow: 0 18px 55px #03080c40;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg-void); }
+body { margin: 0; min-width: 320px; color: var(--text); background: var(--bg-void); font: 400 var(--font-base)/1.65 var(--font-ui); letter-spacing: 0; }
+button, input, select, textarea { font: inherit; }
+button, a, summary { touch-action: manipulation; }
+button, summary { cursor: pointer; }
+button { transition: background .15s, border-color .15s, color .15s; }
+a { color: inherit; }
+h1, h2, h3 { margin: 0; color: var(--text); font-family: var(--font-display); font-weight: 400; line-height: 1.3; letter-spacing: -.02em; text-transform: none; }
+h1 { font-size: var(--heading-lg); line-height: 1.18; }
+h2 { font-size: var(--heading-sm); }
+h3 { font-size: var(--font-xl); }
+p { line-height: 1.75; }
+code, pre, .mono-text { font-family: var(--font-mono); font-size: var(--font-sm); }
+::selection { background: #c7a87540; color: var(--text); }
+:is(a, button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.button, .btn-refresh, .btn-join { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--control-height); padding: 10px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-strong); color: var(--text); font: 500 var(--font-sm)/1.5 var(--font-ui); text-align: center; text-decoration: none; text-transform: none; letter-spacing: 0; }
+.button:hover, .btn-refresh:hover { background: var(--panel-hover); border-color: var(--subtle); }
+.button-primary, .btn-join { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+.button-primary:hover, .btn-join:hover { background: var(--accent-strong); color: var(--on-accent); border-color: var(--accent-strong); }
+.button-ghost, .button-tertiary { background: transparent; color: var(--muted); }
+.button-danger { background: #f0aaa010; color: var(--danger); border-color: #f0aaa050; }
+.button-danger:hover { background: #f0aaa020; border-color: var(--danger); }
+button:disabled, .button[disabled], .is-disabled { opacity: .5; cursor: default; }
+.is-disabled { pointer-events: none; }
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']), select, textarea { min-width: 0; max-width: 100%; min-height: var(--control-height); padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--input); font: 400 var(--font-base)/1.5 var(--font-ui); letter-spacing: 0; }
+input::placeholder, textarea::placeholder { color: var(--subtle); opacity: 1; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-border); outline-offset: 1px; border-color: var(--accent); box-shadow: none; }
+input[type='checkbox'], input[type='radio'], progress { accent-color: var(--accent); }
+textarea { resize: vertical; min-height: 125px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.country-label { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; }
+.country-flag { display: inline-block; flex: 0 0 auto; width: 24px; height: 18px; object-fit: cover; border-radius: 2px; box-shadow: 0 0 0 1px rgb(255 255 255 / 12%); }
+.country-unknown { color: var(--muted); }

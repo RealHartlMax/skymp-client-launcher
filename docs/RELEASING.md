@@ -1,87 +1,84 @@
 # Launcher-Releases / Releases / Релизы
 
-Stand: **26.10.2026**. Diese Anleitung betrifft ausschließlich den **Windows-x64-Launcher 0.2.0**. Ein GitHub-Release wird manuell eingerichtet; der lokale Build veröffentlicht nichts.
+Stand: **27.10.2026**, **Windows x64 / v0.2.1**. Launcher, PHP-Webpakete und native Spiel-Runtime sind getrennte Veröffentlichungen.
 
 ## Deutsch
 
-### Welche Dateien auf GitHub hochladen?
+### Full und Update
 
-**Nur die drei Dateien aus `upload/` als Release-Assets hochladen.** Den Ordner nicht zusätzlich als ZIP verpacken.
+Die finalen Benutzerdateien liegen unter `local-builds/releases/v0.2.1/upload/`:
 
-```text
-local-builds/releases/v0.2.0/
-  upload/                                  # Genau dieser Inhalt ist für GitHub
-    SkyMP-Launcher-v0.2.0.exe
-    SkyMP-Launcher-v0.2.0-windows-x64.zip
-    SHA256SUMS
-  RELEASE-NOTES.md                          # Text ins Beschreibungsfeld kopieren
-  GITHUB-UPLOAD.md                          # Lokale Anleitung
-  portable/                                # Rohinhalt des ZIPs, bleibt lokal
-  diagnostics/                             # Protokolle und Symbole, bleibt lokal
-  VALIDATION.json                           # Lokaler Prüfnachweis
-```
+- `SkyMP-Launcher-v0.2.1.exe`
+- `SkyMP-Launcher-v0.2.1-Full-windows-x64.zip`
+- `SkyMP-Launcher-v0.2.1-Update-windows-x64.zip`
+- `SHA256SUMS`
 
-Die EXE ist eigenständig startbar. Das portable ZIP enthält dieselbe EXE, Anleitung, Buildangaben und Lizenzen. Nutzer benötigen nicht beide Downloads; das ZIP ist die Ausgabe mit Begleitdateien. `SHA256SUMS` enthält die Prüfsummen von EXE und ZIP.
+**Full** ist das vollständige portable Launcher-Paket mit Startanleitung, Buildangaben, Lizenzen und Release-Texten. **Update** enthält die identische EXE mit Update-Anleitung und Lizenzen. Die Oberfläche ist in der EXE eingebettet. Beim Update den Launcher schließen und die bestehende EXE ersetzen; gegebenenfalls den bisherigen Dateinamen beibehalten oder die Verknüpfung anpassen. Einstellungen, Profile und Berichte liegen im Windows-Benutzerprofil und bleiben erhalten.
 
-### Manuelles Release anlegen
+Nur diese vier Dateien als GitHub-Assets verwenden. `portable/`, `update/` und `diagnostics/` bleiben lokal. Weder Cargo-Ausgaben noch PDBs, Testhelfer oder Build-Caches vollständig hochladen. Der aktuelle Build ist **unsigniert**. Defender-Dateiscan, Signatur, SmartScreen, echter Download/Start auf anderen Rechnern und Herstellerentscheidung sind getrennte Nachweise; siehe [ANTIVIRUS.md](ANTIVIRUS.md).
 
-1. Auf GitHub das Repository **RealHartlMax/skymp-client-launcher → Releases → Neues Release** öffnen.
-2. Den gewünschten Tag **`v0.2.0`** und den passenden Quellstand auf **`main`** auswählen. Der vorbereitete Build gehört zu Commit `e599a8145958d7850e6b8450d0f28c8ad98fb916`.
-3. Titel **SkyMP Launcher v0.2.0** verwenden und den Inhalt von `RELEASE-NOTES.md` in die Beschreibung kopieren.
-4. Die drei Dateien aus `upload/` anhängen und die Veröffentlichung selbst durchführen.
+### Bauen und verpacken
 
-Vorhandene Tags prüfen: Ein bestehender Tag kann auf einen älteren Commit zeigen. Die Auswahl von `main` korrigiert einen bereits existierenden Tag nicht automatisch. Bestehende veröffentlichte Tags nicht versehentlich überschreiben; das Releaseziel bewusst festlegen. Diese Dokumentation erstellt oder verschiebt keinen Tag.
-
-### Einen neuen Build vorbereiten
-
-Den vollständigen Quellstand und die gemeinsam genutzten Build-Assets nach [DEVELOPMENT.md](DEVELOPMENT.md) bereitstellen. Anschließend im Ordner `launcher/`:
+Im Ordner `launcher/`:
 
 ```powershell
 npm ci
-npm run build
 npm run test:backend
 npm run tauri -- build
 ```
 
-Die Produkt-EXE liegt danach unter `launcher/src-tauri/target/release/SkyMP Launcher.exe`. Für die Veröffentlichung bekommt ihre Kopie den oben angegebenen Assetnamen. Nur die ausgewählten Benutzerdateien als portables ZIP verpacken; niemals das gesamte `target/release/` mit Build-Caches, Abhängigkeiten und PDBs veröffentlichen.
+Die Produkt-EXE liegt danach unter `launcher/src-tauri/target/release/SkyMP Launcher.exe`. Der Tauri-Build führt den Frontendbuild aus. Die öffentlichen Build-Eingaben sind im Quellstand enthalten; PHP-/Serverbetrieb ist zum Kompilieren nicht erforderlich.
 
-Dateiversion, Architektur, Quellcommit und SHA-256 dokumentieren. Die zugehörige PDB intern zusammen mit der EXE-Prüfsumme archivieren, damit spätere Crashberichte dem richtigen Build zugeordnet werden können. Nach dem Verpacken den ZIP-Inhalt gegen den Rohordner prüfen.
-
-Einzelne heruntergeladene Dateien prüfen:
+Aus dem Repository-Verzeichnis erzeugt der Paketierer Full, Update, EXE und Prüfsummen aus einer sauberen, committeten Arbeitskopie:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 -LiteralPath .\SkyMP-Launcher-v0.2.0.exe
-Get-FileHash -Algorithm SHA256 -LiteralPath .\SkyMP-Launcher-v0.2.0-windows-x64.zip
+./scripts/package-launcher-release.ps1 -OutputDirectory 'local-builds/releases/v0.2.1'
 ```
 
-Die Werte müssen mit `SHA256SUMS` übereinstimmen.
+Standardmäßig verlangt er eine gültige zeitgestempelte Codesignatur und verweigert vorhandene Ausgabeordner. Ein ausdrücklich gewähltes `-AllowUnsigned` erstellt einen entsprechend gekennzeichneten unsignierten lokalen Build. `-AllowDirty` ist ausschließlich für gekennzeichnete Paketierungstests vorgesehen. `BUILD-INFO.json` nennt den Quellcommit und EXE-Hash; `PACKAGE-VALIDATION.json` prüft jeden ZIP-Eintrag und die identische EXE in beiden Paketen. Weitere Ergebnisse stehen in `VALIDATION.json`. Passende EXE/PDB über GUID und Age intern archivieren.
 
-### Weitere Veröffentlichungen
+### Codesignierung
 
-Ein GitHub-Launcher-Release ändert weder Server noch Client-Runtime oder Webseiten. Für den eigenen Download-Webspace müssen EXE und Prüfsummen zu den Angaben in `version.json` bzw. dem gewählten Kanalmanifest passen. Das Veröffentlichen eines GitHub-Tags allein aktualisiert diese Dateien nicht. Einen nicht vorhandenen Release-Kanal nicht als verfügbar markieren.
+Einen öffentlich vertrauenswürdigen Codesignaturanbieter einrichten. Für ein bereits im Windows-Zertifikatspeicher verfügbares Zertifikat bzw. eingebundenes Hardwaretoken:
 
-Die native Client-Runtime folgt [RUNTIME_UPDATES.md](RUNTIME_UPDATES.md), Webpakete folgen [PHP_HOSTING.md](PHP_HOSTING.md). Reine Markdown-Änderungen erfordern keinen neuen Launcher-Build und verändern bereits vorbereitete Release-Assets nicht.
+```powershell
+./scripts/sign-windows-release.ps1 `
+  -FilePath 'launcher/src-tauri/target/release/SkyMP Launcher.exe' `
+  -CertificateThumbprint '<40 hex characters>' `
+  -TimestampUrl 'https://timestamp.example.org'
+./scripts/inspect-windows-release.ps1 -FilePath 'launcher/src-tauri/target/release/SkyMP Launcher.exe' -RequireSignature
+```
+
+Der Helfer verwendet SHA-256 und einen RFC-3161-Zeitstempel. Cloudanbieter verwenden ihren dokumentierten Signieraufruf vor derselben Signaturprüfung. **Nach jeder Signierung** alle Pakete, Build-/Prüfmetadaten und Prüfsummen neu erzeugen und die fertigen Bytes erneut prüfen. Der automatische Release-Workflow stoppt weiterhin ohne gültige Signatur; es ist noch kein Anbieter konfiguriert.
+
+### Tag, Release-Texte und Versionskatalog
+
+Der Quellstand wird mit `v0.2.1` bezeichnet. Den zugehörigen Commit aus Tag bzw. `BUILD-INFO.json` verwenden und keinen vorhandenen veröffentlichten Tag verschieben. Die drei Texte liegen im Paket als `RELEASE-NOTES.de.md`, `RELEASE-NOTES.en.md` und `RELEASE-NOTES.ru.md`; Quellen sind [DE](releases/v0.2.1.de.md), [EN](releases/v0.2.1.en.md), [RU](releases/v0.2.1.ru.md). Ein Commit/Tag/Push allein ist noch keine erfolgreiche GitHub-Release-Veröffentlichung oder ein Webdeployment.
+
+**Erst nach dem offiziellen GitHub-Release** dessen Katalogdaten lokal abgleichen:
+
+```powershell
+node scripts/sync-launcher-release.mjs v0.2.1
+```
+
+Das Skript akzeptiert ausschließlich ein bereits veröffentlichtes stabiles Release mit EXE und GitHub-SHA-256. Es aktualisiert lokal `web/update.skymp-worlds.net/version.json` für ältere Launcher und `channels/release.json`. Danach die Update-Webdateien auf den Host übertragen. Solange v0.2.1 noch nicht offiziell veröffentlicht ist, bleibt der Katalog auf dem tatsächlich veröffentlichten v0.2.0-Stand. Der neue Launcher prüft zusätzlich offizielle GitHub-Releases.
+
+### Webkonto und Hosting
+
+Die neue Kontoverbindung benötigt die passenden **API- und Manage-Webpakete**. Diese separaten ZIPs werden mit `scripts/package-web.ps1` erstellt. Vorhandene Hosting-Konfigurationen und Daten erhalten. Das Update-Webpaket transportiert den Versionskatalog; ein GitHub-Tag aktualisiert das Hosting nicht. Der Launcher stellt Steam-/Spielanmeldungen durch das Webkonto nicht automatisch um. Details: [Einstellungen](LAUNCHER_SETTINGS.md), [PHP-Hosting](PHP_HOSTING.md).
 
 ## English
 
-Upload **only these three files from `upload/`** as GitHub release assets:
+Upload exactly four assets from `upload/`: EXE, Full ZIP, Update ZIP and `SHA256SUMS`. Full contains the complete portable launcher and release texts; Update contains the identical EXE with update instructions/licenses. Close the launcher, replace its EXE and retain user-profile settings. Symbols and diagnostics remain local. The build is unsigned until a trusted signing provider is configured; the automated release gate rejects unsigned output.
 
-- `SkyMP-Launcher-v0.2.0.exe`
-- `SkyMP-Launcher-v0.2.0-windows-x64.zip`
-- `SHA256SUMS`
+Build with `npm ci`, `npm run test:backend`, `npm run tauri -- build` inside `launcher/`. From the repository root, `scripts/package-launcher-release.ps1 -OutputDirectory ...` requires a clean committed source tree and a valid signature. `-AllowUnsigned` explicitly labels a local unsigned build. Package metadata records the source commit and hashes; Full/Update entries are verified.
 
-Paste `RELEASE-NOTES.md` into the release description. `portable/`, `diagnostics/`, scripts and local validation reports remain local. The prepared binary belongs to commit `e599a8145958d7850e6b8450d0f28c8ad98fb916` on `main`. Set up tag `v0.2.0` and the GitHub release yourself, checking an existing tag's target first.
-
-The EXE is portable and embeds its frontend; the ZIP adds instructions, build information and licenses. It is not an installer and contains no game, server or native client runtime. A GitHub release does not update the website's download manifests automatically. Build instructions and the currently required shared source assets are in [DEVELOPMENT.md](DEVELOPMENT.md).
+Use tag `v0.2.1`, the matching commit, and the three `RELEASE-NOTES.de/en/ru.md` texts. Publishing the tag is distinct from publishing a GitHub release. After the official stable release exists, run `node scripts/sync-launcher-release.mjs v0.2.1` and deploy the resulting update catalogs. Older executables need an actual launcher update to gain the new notice UI. Account linking also requires the separate API/Manage web packages; game runtime/server packages are independent.
 
 ## Русский
 
-В GitHub Release загрузите **только три файла из `upload/`**:
+В `upload/` находятся ровно четыре файла: EXE, Full ZIP, Update ZIP и `SHA256SUMS`. Full — полный портативный пакет с текстами релиза; Update содержит ту же EXE с инструкцией обновления и лицензиями. Закройте лаунчер и замените EXE; настройки профиля Windows сохраняются. Символы и диагностика остаются локальными. Сборка не подписана, пока не настроен доверенный провайдер; автоматическая публикация блокирует неподписанные файлы.
 
-- `SkyMP-Launcher-v0.2.0.exe`
-- `SkyMP-Launcher-v0.2.0-windows-x64.zip`
-- `SHA256SUMS`
+Сборка в `launcher/`: `npm ci`, `npm run test:backend`, `npm run tauri -- build`. Из корня репозитория `scripts/package-launcher-release.ps1 -OutputDirectory ...` требует чистые закоммиченные исходники и действительную подпись. `-AllowUnsigned` явно помечает локальную неподписанную сборку. Метаданные содержат коммит и хеши; файлы обоих ZIP проверяются.
 
-Текст из `RELEASE-NOTES.md` вставьте в описание релиза. Папки `portable/`, `diagnostics/`, скрипты и локальные отчёты загружать не нужно. Подготовленная сборка относится к коммиту `e599a8145958d7850e6b8450d0f28c8ad98fb916` в `main`. Тег `v0.2.0` и релиз создаются вручную; сначала проверьте, на какой коммит указывает существующий тег.
-
-EXE содержит встроенный интерфейс, а ZIP дополнительно включает инструкции, сведения о сборке и лицензии. Это portable-лаунчер, без игры, сервера и нативной среды клиента. Публикация тега GitHub не меняет манифесты обновлений на сайте. Сборка и необходимые общие исходные ресурсы описаны в [DEVELOPMENT.md](DEVELOPMENT.md).
+Используйте тег `v0.2.1`, соответствующий коммит и три текста `RELEASE-NOTES.de/en/ru.md`. Тег не равнозначен опубликованному GitHub Release. После официального стабильного релиза выполните `node scripts/sync-launcher-release.mjs v0.2.1` и загрузите каталоги на хостинг. Старым EXE нужно обновление, чтобы получить новый интерфейс уведомлений. Для входа также нужны отдельные пакеты сайтов API/Manage; игровой runtime и сервер поставляются независимо.

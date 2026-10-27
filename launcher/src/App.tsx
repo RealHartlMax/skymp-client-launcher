@@ -8,11 +8,14 @@ import { version as launcherVersion } from '../package.json';
 import { open } from '@tauri-apps/api/shell';
 import { invoke } from '@tauri-apps/api/tauri';
 import CrashReports from './CrashReports';
-import LauncherSettings, { type PresenceStatus } from './LauncherSettings';
+import LauncherSettings, { type PresenceStatus, type SteamSnapshot } from './LauncherSettings';
 import { loadPreferences, savePreferences, privateText, type LauncherPreferences } from './launcherPreferences';
 import { PrivacyContext } from './Privacy';
 import useMenuAudio from './useMenuAudio';
 import { listen } from '@tauri-apps/api/event';
+import useLauncherUpdates from './useLauncherUpdates';
+import LauncherUpdateNotice from './LauncherUpdateNotice';
+import {compareVersions,trustedReleaseUrl} from './launcherUpdates';
 
 interface ApiServerEntry {
   id?: string;
@@ -526,6 +529,7 @@ async function fetchVersionMetadata(versionJsonUrl: string, language: AppLanguag
 }
 
 export default function App() {
+  const {updates,check:checkUpdates}=useLauncherUpdates();
   const [viewport, setViewport] = useState<ViewportProfile>(() => getViewportProfile());
   const [language, setLanguage] = useState<AppLanguage>(() => loadLanguage());
   const [servers, setServers] = useState<ServerEntry[]>([]);
@@ -558,6 +562,7 @@ export default function App() {
   const [preferences, setPreferences] = useState(loadPreferences);
   const [preferencesStorageError, setPreferencesStorageError] = useState(false);
   const [presence, setPresence] = useState<PresenceStatus>({ state: 'disabled' });
+  const [steamSnapshot, setSteamSnapshot] = useState<SteamSnapshot | null>(null);
   const [playingServer, setPlayingServer] = useState<ServerConnection | null>(null);
   const [gameRunning, setGameRunning] = useState(false);
   useMenuAudio(preferences, preparingServer || gameRunning);
@@ -945,7 +950,8 @@ export default function App() {
       </header>
       {showSettings && <LauncherSettings language={language} onLanguage={setLanguage} preferences={preferences} onPreferences={updatePreferences} storageError={preferencesStorageError}
         path={setupPathDraft} onPath={setSetupPathDraft} onVerify={() => void verifyAndSavePath()} checkingPath={checkingPath} pathStatus={setupStatus || skyrimCheck?.message || ''}
-        savedPath={skyrimDir} onClearHistory={clearHistory} presence={presence} openExternal={openExternal} onClose={() => setShowSettings(false)} />}
+        savedPath={skyrimDir} onClearHistory={clearHistory} presence={presence} steamSnapshot={steamSnapshot} onSteamSnapshot={setSteamSnapshot} updates={updates} onCheckUpdates={()=>void checkUpdates()} openExternal={openExternal} onClose={() => setShowSettings(false)} />}
+      <LauncherUpdateNotice updates={updates} language={language} onCheck={()=>void checkUpdates()} openExternal={openExternal} />
       <div className={`dashboard-layout ${page === 'home' ? '' : 'browser-layout'}`}>
         <main className="dashboard-main">
           {page === 'home' && <>
@@ -1006,7 +1012,7 @@ export default function App() {
               {versionInfo.changelogUrl ? (
                 <button className="btn-refresh" onClick={() => openExternal(versionInfo.changelogUrl)}>{i18n.releaseOpenChangelog}</button>
               ) : null}
-              {versionInfo.downloadUrl ? (
+              {trustedReleaseUrl(versionInfo.downloadUrl) && compareVersions(versionInfo.version,launcherVersion) === 1 ? (
                 <button className="btn-join" onClick={() => openExternal(versionInfo.downloadUrl)}>{i18n.releaseDownload}</button>
               ) : null}
             </div>

@@ -1,6 +1,6 @@
 # SkyMP Worlds Launcher
 
-**Version 0.2.0 · Windows x64 · Tauri / React / Rust**
+**Version 0.2.1 · Windows x64 · Tauri / React / Rust**
 
 [Deutsch](#deutsch) · [English](#english) · [Русский](#русский)
 
@@ -20,7 +20,7 @@ Benötigt werden Windows x64 mit Microsoft Edge WebView2 Runtime, Steam und eine
 
 Der Splashscreen zeigt Dateiprüfung, Downloads und Spielstart. Er schließt sich automatisch, sobald der Start des echten Skyrim-Prozesses bestätigt wurde. Das Spiel behält den Fokus. Bei einem Startfehler bleiben Meldung und Rückweg sichtbar.
 
-### Enthalten in 0.2.0
+### Enthalten in 0.2.1
 
 - Serverbrowser mit Suche, Filtern, Sortierung, Favoriten, Verlauf und Detailseiten.
 - Länderflaggen, öffentliche Serverbilder, Spielerzahlen sowie Online-/Offline-Anzeige.
@@ -36,7 +36,7 @@ Weitere Spielserver lassen sich über **Direktverbindung** eintragen. Der zentra
 
 [Verbindung und Dateien](docs/CONNECTING.md) · [Einstellungen](docs/LAUNCHER_SETTINGS.md) · [Steam und Whitelist](docs/STEAM_AUTHENTICATION.md) · [Absturzberichte](docs/CRASH_REPORTS.md)
 
-Für GitHub werden ausschließlich die drei Dateien aus `local-builds/releases/v0.2.0/upload/` verwendet: EXE, portables ZIP und `SHA256SUMS`. Details stehen in der [Anleitung für manuelle Releases](docs/RELEASING.md). Server, Webseiten und native Spiel-Runtime haben eigene Pakete und Veröffentlichungswege.
+Für GitHub werden die vier Dateien aus `local-builds/releases/v0.2.1/upload/` verwendet: EXE, Full-ZIP, Update-ZIP und `SHA256SUMS`. Die v0.2.1 ergänzt die Webkonto-Anmeldung in den Einstellungen, erhält das geprüfte Steam-Konto beim erneuten Öffnen und zeigt neuere offizielle Releases an. Details stehen in der [Release-Anleitung](docs/RELEASING.md) und den Texten für [DE](docs/releases/v0.2.1.de.md), [EN](docs/releases/v0.2.1.en.md), [RU](docs/releases/v0.2.1.ru.md). Bei Defender-Erkennungen helfen die [Befunde](docs/ANTIVIRUS.md). Server, Webseiten und native Spiel-Runtime haben eigene Veröffentlichungswege.
 
 ## English
 
@@ -52,7 +52,7 @@ Windows x64 with Microsoft Edge WebView2 Runtime, Steam and a server-supported S
 
 The splash shows verification, downloads and startup. It closes automatically after the real Skyrim process is detected, without bringing the launcher to the foreground. Startup errors remain visible.
 
-### Included in 0.2.0
+### Included in 0.2.1
 
 - Server search, filters, sorting, favorites, history and detail pages.
 - Country flags, public server artwork, player counts and online/offline status.
@@ -66,7 +66,7 @@ Other game servers can be added through **Direct connection**. The registry URL 
 
 [Connection guide](docs/CONNECTING.md) · [Settings](docs/LAUNCHER_SETTINGS.md) · [Steam and approval](docs/STEAM_AUTHENTICATION.md) · [Release guide](docs/RELEASING.md) · [Server operator handbook](docs/SERVER_OWNER_GUIDE.en.md)
 
-GitHub release assets are only the EXE, portable ZIP and `SHA256SUMS` from the release's `upload/` directory. Game-server, website and native runtime packages are separate.
+GitHub assets are the EXE, Full ZIP, Update ZIP and `SHA256SUMS` from `upload/`. Version 0.2.1 adds website account sign-in in Settings, retains the checked Steam account when reopening Settings and shows newer official releases. Game-server, website and native runtime packages are separate.
 
 ## Русский
 
@@ -82,7 +82,7 @@ SkyMP Worlds — лаунчер для независимых многополь
 
 Экран подключения показывает проверку файлов, загрузку и запуск. Он закрывается автоматически после обнаружения процесса Skyrim и не переводит фокус на лаунчер. При ошибке запуска сообщение остаётся открытым.
 
-### Возможности 0.2.0
+### Возможности 0.2.1
 
 - Поиск, фильтры, сортировка, избранное, история и страницы серверов.
 - Флаги стран, изображения серверов, число игроков и статус онлайн/офлайн.
@@ -96,7 +96,7 @@ SkyMP Worlds — лаунчер для независимых многополь
 
 [Настройки](docs/LAUNCHER_SETTINGS.md) · [Steam и допуск](docs/STEAM_AUTHENTICATION.md) · [Публикация релиза](docs/RELEASING.md) · [Руководство владельца сервера](docs/SERVER_OWNER_GUIDE.ru.md)
 
-Для релиза GitHub загружаются только EXE, portable ZIP и `SHA256SUMS` из папки `upload/`. Игровой сервер, сайты и нативный клиент публикуются отдельно.
+Для GitHub загружаются EXE, Full ZIP, Update ZIP и `SHA256SUMS` из `upload/`. Версия 0.2.1 добавляет вход через аккаунт сайта, сохраняет проверенный Steam при повторном открытии настроек и показывает новые официальные версии. Игровой сервер, сайты и нативный клиент публикуются отдельно.
 
 ## Project and documentation
 

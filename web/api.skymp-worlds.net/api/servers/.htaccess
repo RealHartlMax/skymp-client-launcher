@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# Compatibility entry point delegates to the dashboard-backed native master.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)$ index.php?masterKey=$1 [QSA,L]

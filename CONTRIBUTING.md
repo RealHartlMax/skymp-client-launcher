@@ -1,11 +1,11 @@
 # Contributing to SkyMP Worlds Launcher
 
-Documentation reviewed **26 October 2026**, launcher **0.2.0**. Start with the [documentation index](docs/README.md), [development guide](docs/DEVELOPMENT.md) and [current validation scope](docs/STATUS.md).
+Documentation reviewed **26 October 2026**, launcher **0.2.1**. Start with the [documentation index](docs/README.md), [development guide](docs/DEVELOPMENT.md) and [current validation scope](docs/STATUS.md).
 
 ## Components
 
 - `launcher/`: Tauri 1, React/TypeScript and the Rust preparation/authentication/diagnostic backend.
-- `web/`: independent local PHP/static webroots and shared launcher assets. This tree is currently ignored by Git; a fresh checkout requires the shared inputs listed in the development guide.
+- `web/`: selected public PHP/API/Manage/DEV sources and shared launcher build assets are tracked. Deployment output and private configuration/state remain ignored; add new public files explicitly when needed.
 - `master-api/`: optional Node.js 24+ reference with isolated local accounts.
 - Native game client and game server: separate [SkyMP fork](https://github.com/RealHartlMax/skymp).
 
@@ -23,7 +23,7 @@ npm run tauri -- build
 
 Use `npm run tauri -- dev` for desktop development. The browser-only Vite page cannot invoke native commands. Release assets and manual publication are described in [RELEASING.md](docs/RELEASING.md); do not package the entire Cargo target directory.
 
-Run the checks relevant to the change. Record passed, failed and excluded tests separately. A package, loopback or browser-simulation result is not a multiplayer qualification. The release currently has 69 passing Rust tests and three excluded integration tests; see its dated evidence rather than treating these numbers as permanent.
+Run the checks relevant to the change. Record passed, failed and excluded tests separately. A package, loopback or browser-simulation result is not a multiplayer qualification. Version 0.2.1 has 74 passing Rust tests and three excluded integration tests; see its dated evidence rather than treating these numbers as permanent.
 
 ## Changes and documentation
 

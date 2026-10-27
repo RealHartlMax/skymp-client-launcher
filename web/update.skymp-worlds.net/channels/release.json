@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "releaseDate": "2026-10-26",
+  "channel": "release",
+  "windowsAssetName": "SkyMP-Launcher-v0.2.0.exe",
+  "downloadUrl": "https://github.com/RealHartlMax/skymp-client-launcher/releases/download/v0.2.0/SkyMP-Launcher-v0.2.0.exe",
+  "changelogUrl": "https://github.com/RealHartlMax/skymp-client-launcher/releases/tag/v0.2.0",
+  "runtimeCatalogUrl": "https://update.skymp-worlds.net/client-runtime/catalog.json",
+  "communityUrl": "https://discord.gg/NSXtNNbjuR",
+  "changelog": {
+    "de": [
+      "Offizielles Launcher-Release v0.2.0. Details und Download auf GitHub."
+    ],
+    "en": [
+      "Official launcher release v0.2.0. Details and download on GitHub."
+    ],
+    "ru": [
+      "Официальный релиз лаунчера v0.2.0. Подробности и загрузка на GitHub."
+    ]
+  },
+  "windowsAssetSha256": "395fc35bfa5783cf2b55bc83beaed3bf902f820467812f6ad1f332d34a7a9f7f",
+  "docsUrl": "https://docs.skymp-worlds.net/",
+  "runtimeManifest": "1.7.104.0/client-2026-10-24-steam/runtime-manifest.json",
+  "available": true
+}

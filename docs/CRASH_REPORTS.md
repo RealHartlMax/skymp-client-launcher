@@ -1,6 +1,6 @@
 # Absturzberichte für Launcher und Spiel
 
-Dokumentationsstand: **26.10.2026**, Launcher **0.2.0**.
+Dokumentationsstand: **26.10.2026**, Launcher **0.2.1**.
 
 Im Launcher 0.2.0 implementiert; der PHP-Reportdienst wird separat eingerichtet und veröffentlicht.
 Die Prozessüberwachung in `launcher/src-tauri/src/game_session.rs` liefert
@@ -57,6 +57,7 @@ für Basisberichte muss gesondert erklärt und widerrufbar sein.
 | Nutzerangaben | Freiwillige Beschreibung und optionaler Kontakt für Rückfragen; Kontakt getrennt von technischen Such-/Gruppierungsdaten speichern. |
 
 Die Sammlung verwendet eine feste Dateiliste und begrenzte Zeit-/Größenausschnitte.
+Seit 0.2.1 werden der umgeleitete Dokumente-Ordner sowie Windows-/Hardwarefelder direkt über native Windows-APIs gelesen; diese Diagnose startet keine PowerShell-/WMI-Unterprozesse mehr. Die Feldliste bleibt begrenzt; fehlende Hardwarewerte bleiben unbekannt.
 Passwörter, Steam-Tickets, Sitzungstokens, Cookies, private Master-/API-Schlüssel
 und Zugangsdaten aus URL-Parametern dürfen nicht in den Basisbericht gelangen.
 Benutzerverzeichnisse werden etwa zu `%USERPROFILE%` normalisiert.

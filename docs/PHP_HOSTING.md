@@ -268,3 +268,9 @@ Neue Konto-, Interface- und Spieleinstellungen: [DE / EN / RU](LAUNCHER_SETTINGS
 ## Launcher-Release und Webpakete getrennt halten
 
 Ein GitHub-Release des Launchers besteht nur aus EXE, portablem ZIP und `SHA256SUMS`; siehe [RELEASING.md](RELEASING.md). Die sieben Domain-ZIPs gehören ausschließlich in ihre jeweiligen Webroots. Eine GitHub-Veröffentlichung aktualisiert weder `version.json` noch Runtime-Kataloge im Hosting automatisch. Name und Spielerlimit werden nur auf dem Gameserver gesetzt; das Web übernimmt sie aus authentifizierten Heartbeats.
+
+## Launcher 0.2.1: Webkonto und offizielle Versionen
+
+Die Kontoverbindung in den Launcher-Einstellungen benötigt die passenden API- und Manage-Pakete. Manage liefert launcher-login.php, includes/launcher-auth.php und den erweiterten native-master.php; API leitet /api/users/launcher/status, /me und /logout an denselben privaten Kontenspeicher weiter. Bestehende config.php und Kontendaten erhalten. Die Browserbestätigung erzeugt eine separate acht Stunden gültige Profilsitzung; sie gewährt keine Spiel- oder Verwaltungsrechte. Nach Passwortänderung oder Ablauf ist eine neue Anmeldung erforderlich.
+
+Der neue Launcher prüft zusätzlich veröffentlichte stabile GitHub-Releases. Ältere EXEs lesen weiterhin version.json bzw. ihre Kanalkataloge und bekommen die neue Hinweisoberfläche erst nach Aktualisierung. Nach einem offiziell veröffentlichten Release node scripts/sync-launcher-release.mjs v0.2.1 ausführen und die erzeugten Update-Webdateien übertragen. Ein Tag allein oder eine nur lokal gebaute EXE löst keine offizielle Versionsmeldung aus. Die vorbereiteten Kataloge zeigen bis dahin auf das tatsächlich veröffentlichte v0.2.0-GitHub-Asset.

@@ -154,6 +154,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.tag_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -193,22 +195,22 @@ jobs:
             throw "Expected launcher executable not found: $exeSource"
           }
 
-          $exeName = "SkyMp-Client-v$version.exe"
-          Copy-Item $exeSource $exeName -Force
+          # Supply the project's trusted signing provider before this step.
+          # An unsigned build must not silently become a public release.
+          ./scripts/inspect-windows-release.ps1 -FilePath $exeSource -RequireSignature
 
-          $zipName = "SkyMp-Client-v$version-windows-x64.zip"
-          Compress-Archive -Path "launcher/src-tauri/target/release/*" -DestinationPath $zipName -Force
-
-          "exe_name=$exeName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "zip_name=$zipName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $sourceVersion = (Get-Content launcher/package.json -Raw | ConvertFrom-Json).version
+          if ($sourceVersion -ne $version) { throw 'Tag and launcher source versions differ.' }
+          $releaseDirectory = Join-Path $env:RUNNER_TEMP "launcher-$env:TAG_NAME"
+          ./scripts/package-launcher-release.ps1 -OutputDirectory $releaseDirectory
+          "upload_directory=$releaseDirectory/upload" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-windows
           path: |
-            ${{ steps.artifacts.outputs.exe_name }}
-            ${{ steps.artifacts.outputs.zip_name }}
+            ${{ steps.artifacts.outputs.upload_directory }}/*
 
   publish:
     name: Publish GitHub release

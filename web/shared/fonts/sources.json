@@ -1,0 +1,42 @@
+[
+  {
+    "sha256": "82ff72b28e6610f2c62de49d0f295c160a157b2718fa814bb6c512ebfdebb31d",
+    "file": "noto-sans-cyrillic-ext-82ff72b28e66.woff2",
+    "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5aPdu2ui.woff2"
+  },
+  {
+    "sha256": "6ab64433de6077ca5ad31b05420450ce986a616a4ea47b6ad16f3217055dafc3",
+    "file": "noto-sans-cyrillic-6ab64433de60.woff2",
+    "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5ardu2ui.woff2"
+  },
+  {
+    "sha256": "6d5a79315528df191b9d86f97b0c4272a8b588fcb166773fe6588ac795de0613",
+    "file": "noto-sans-latin-ext-6d5a79315528.woff2",
+    "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5aDdu2ui.woff2"
+  },
+  {
+    "sha256": "51ca196f49a33e79e7870ff88ebd2829a3f627a51e7d690986618f0e7ad2b52d",
+    "file": "noto-sans-latin-51ca196f49a3.woff2",
+    "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5a7duw.woff2"
+  },
+  {
+    "sha256": "7c7afb20d33e30ec38245187464419281115615db288f294414f49802396b612",
+    "file": "noto-serif-cyrillic-ext-7c7afb20d33e.woff2",
+    "source": "https://fonts.gstatic.com/s/notoserif/v33/ga6daw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTYf3D33Esw.woff2"
+  },
+  {
+    "sha256": "54e3bd0c4a002b0f76bf9c758507fe9bb170f9e364ea4ecc85fc8b22819bca7e",
+    "file": "noto-serif-cyrillic-54e3bd0c4a00.woff2",
+    "source": "https://fonts.gstatic.com/s/notoserif/v33/ga6daw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTYf-D33Esw.woff2"
+  },
+  {
+    "sha256": "2654f8d1261a420fc81628122bee9d494b493227e3d7d9baa4238360b92b11d3",
+    "file": "noto-serif-latin-ext-2654f8d1261a.woff2",
+    "source": "https://fonts.gstatic.com/s/notoserif/v33/ga6daw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTYf0D33Esw.woff2"
+  },
+  {
+    "sha256": "46281456234014ceb2a79bff447245de0f76b8d803be0738972ed374c3206c5b",
+    "file": "noto-serif-latin-462814562340.woff2",
+    "source": "https://fonts.gstatic.com/s/notoserif/v33/ga6daw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTYf6D30.woff2"
+  }
+]

@@ -840,15 +840,10 @@ impl CrashReports {
 fn documents_skse() -> PathBuf {
     #[cfg(windows)]
     {
-        // Query the user's redirected Documents folder (e.g. OneDrive), not an assumed path.
-        if let Some(profile) = std::env::var_os("USERPROFILE") {
-            let fallback =
-                PathBuf::from(profile).join("Documents/My Games/Skyrim Special Edition/SKSE");
-            use std::os::windows::process::CommandExt;
-            if let Ok(output) = std::process::Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-Command","[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); [Environment]::GetFolderPath('MyDocuments')"]).creation_flags(0x08000000).output() {
-                if output.status.success() { let docs=String::from_utf8_lossy(&output.stdout).trim().to_owned(); if !docs.is_empty() { return PathBuf::from(docs).join("My Games/Skyrim Special Edition/SKSE"); } }
-            }
-            return fallback;
+        if let Some(documents) = crate::windows_diagnostics::documents().or_else(|| {
+            std::env::var_os("USERPROFILE").map(|p| PathBuf::from(p).join("Documents"))
+        }) {
+            return documents.join("My Games/Skyrim Special Edition/SKSE");
         }
     }
     PathBuf::new()
@@ -857,22 +852,10 @@ fn documents_skse() -> PathBuf {
 fn environment() -> Value {
     #[cfg(windows)]
     {
-        use std::os::windows::process::CommandExt;
-        // Fixed allowlist of hardware fields. No serials, machine/user names or network data.
-        let script = "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); $ErrorActionPreference='Stop'; $o=Get-CimInstance Win32_OperatingSystem; $c=Get-CimInstance Win32_Processor | Select-Object -First 1; $g=@(Get-CimInstance Win32_VideoController | Select-Object -First 4 Name,DriverVersion); @{os=$o.Version;architecture=$o.OSArchitecture;cpu=$c.Name;ramTotalKiB=$o.TotalVisibleMemorySize;ramFreeKiB=$o.FreePhysicalMemory;gpu=$g} | ConvertTo-Json -Depth 4 -Compress";
-        if let Ok(output) = std::process::Command::new("powershell.exe")
-            .args(["-NoProfile", "-NonInteractive", "-Command", script])
-            .creation_flags(0x08000000)
-            .output()
-        {
-            if output.status.success() && output.stdout.len() < 16384 {
-                if let Ok(value) = serde_json::from_slice::<Value>(&output.stdout) {
-                    return value;
-                }
-            }
-        }
+        crate::windows_diagnostics::environment()
     }
-    json!({"os":std::env::consts::OS,"architecture":std::env::consts::ARCH,"hardwareAvailable":false})
+    #[cfg(not(windows))]
+    { json!({"os":std::env::consts::OS,"architecture":std::env::consts::ARCH,"hardwareAvailable":false}) }
 }
 
 #[cfg(test)]

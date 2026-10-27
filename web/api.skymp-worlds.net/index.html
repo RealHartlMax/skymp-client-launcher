@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyMP Worlds | API Service</title>
+    
+    
+    
+    
+    <link rel="stylesheet" href="assets/worlds.css?v=8de9376aef2a">
+</head>
+<body class="site-shell">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div class="site-layout">
+        <header class="site-header panel">
+            <a class="brand-link" href="https://skymp-worlds.net/">SkyMP <span>Worlds</span></a>
+            <div class="site-header-actions">
+                <a class="button button-ghost docs-link" data-platform-downloads="navigation" href="https://update.skymp-worlds.net/index.html?lang=en">Downloads <span aria-hidden="true">↗</span></a>
+                <a class="button button-ghost docs-link" data-platform-docs="navigation" href="https://docs.skymp-worlds.net/?lang=en">Documentation <span aria-hidden="true">↗</span></a>
+                <a class="button button-ghost community-link" data-platform-community="navigation" href="https://discord.gg/NSXtNNbjuR" target="_blank" rel="noopener noreferrer">SkyMP Discord <span aria-hidden="true">↗</span></a>
+                <div class="language-bar compact">
+                    <label class="language-label" for="lang-switch-api" data-i18n="lang_label">Language</label>
+                    <select id="lang-switch-api" class="language-select">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                        <option value="ru">Русский</option>
+                    </select>
+                </div>
+                <a class="button button-secondary" href="https://servers.skymp-worlds.net/" data-i18n="browser_button">Open server browser</a>
+            </div>
+        </header>
+
+        <section class="hero-stage">
+            <article class="hero-panel panel">
+                <p class="eyebrow" data-i18n="eyebrow">API Service</p>
+                <h1 data-i18n="title">This domain is intended for API access, not direct browsing.</h1>
+                <p class="site-copy" data-i18n="description">It validates heartbeat calls, serves the public list of active servers, and provides backend functionality for browser and launcher clients.</p>
+            </article>
+
+            <aside class="state-panel panel">
+                <div class="panel-header">
+                    <p class="eyebrow" data-i18n="legend_eyebrow">Service Role</p>
+                    <h2 data-i18n="legend_title">Core endpoints</h2>
+                </div>
+                <div class="endpoint-list">
+                    <a class="endpoint-link" href="list.php">list.php</a>
+                    <p class="site-copy" data-i18n="legend_desc_1">Returns the current JSON list of active servers.</p>
+                    <a class="endpoint-link" href="heartbeat.php">heartbeat.php</a>
+                    <p class="site-copy" data-i18n="legend_desc_2">Accepts heartbeat updates from dedicated servers.</p>
+                </div>
+            </aside>
+        </section>
+
+        <section class="endpoint-grid">
+            <article class="endpoint-card panel">
+                <p class="eyebrow" data-i18n="card_1_eyebrow">Public List</p>
+                <h3 data-i18n="card_1_title">Server discovery</h3>
+                <p class="site-copy" data-i18n="card_1_desc">Browser and launcher use the same server list endpoint.</p>
+            </article>
+            <article class="endpoint-card panel">
+                <p class="eyebrow" data-i18n="card_2_eyebrow">Heartbeat</p>
+                <h3 data-i18n="card_2_title">Server status</h3>
+                <p class="site-copy" data-i18n="card_2_desc">Dedicated servers periodically prove that they are alive and update player counts here.</p>
+            </article>
+            <article class="endpoint-card panel">
+                <p class="eyebrow" data-i18n="card_3_eyebrow">Schema</p>
+                <h3 data-i18n="card_3_title">Shared data model</h3>
+                <p class="site-copy" data-i18n="card_3_desc">`servers.sql` defines the registry fields that the browser, dashboard and backend all speak.</p>
+            </article>
+        </section>
+    </div>
+
+    <script>
+        window.SKMP_TRANSLATIONS = {
+            de: {
+                __title: 'SkyMP Worlds | API-Service',
+                lang_label: 'Sprache',
+                browser_button: 'Server-Browser öffnen',
+                eyebrow: 'API-Service',
+                title: 'Diese Domain ist für API-Zugriffe gedacht, nicht für direktes Browsen.',
+                description: 'Sie validiert Heartbeat-Aufrufe, stellt die öffentliche Liste aktiver Server bereit und liefert Backend-Funktionen für Browser und Launcher.',
+                legend_eyebrow: 'Dienstrolle',
+                legend_title: 'Zentrale Endpunkte',
+                legend_desc_1: 'Liefert die aktuelle JSON-Liste aktiver Server.',
+                legend_desc_2: 'Nimmt Heartbeat-Aktualisierungen von Dedicated Servern entgegen.',
+                card_1_eyebrow: 'Öffentliche Liste',
+                card_1_title: 'Server-Discovery',
+                card_1_desc: 'Browser und Launcher nutzen denselben Endpunkt für die Serverliste.',
+                card_2_eyebrow: 'Heartbeat',
+                card_2_title: 'Server-Status',
+                card_2_desc: 'Dedicated Server melden hier regelmäßig ihren Status und ihre Spielerzahlen.',
+                card_3_eyebrow: 'Schema',
+                card_3_title: 'Gemeinsames Datenmodell',
+                card_3_desc: '`servers.sql` definiert die Registerfelder, die Browser, Dashboard und Backend gemeinsam sprechen.'
+            },
+            en: {
+                __title: 'SkyMP Worlds | API Service',
+                lang_label: 'Language',
+                browser_button: 'Open server browser',
+                eyebrow: 'API Service',
+                title: 'This domain is intended for API access, not direct browsing.',
+                description: 'It validates heartbeat calls, serves the public list of active servers, and provides backend functionality for browser and launcher clients.',
+                legend_eyebrow: 'Service Role',
+                legend_title: 'Core endpoints',
+                legend_desc_1: 'Returns the current JSON list of active servers.',
+                legend_desc_2: 'Accepts heartbeat updates from dedicated servers.',
+                card_1_eyebrow: 'Public List',
+                card_1_title: 'Server discovery',
+                card_1_desc: 'Browser and launcher use the same server list endpoint.',
+                card_2_eyebrow: 'Heartbeat',
+                card_2_title: 'Server status',
+                card_2_desc: 'Dedicated servers periodically prove that they are alive and update player counts here.',
+                card_3_eyebrow: 'Schema',
+                card_3_title: 'Shared data model',
+                card_3_desc: '`servers.sql` defines the registry fields that the browser, dashboard and backend all speak.'
+            },
+            ru: {
+                __title: 'SkyMP Worlds | API-сервис',
+                lang_label: 'Язык',
+                browser_button: 'Открыть браузер серверов',
+                eyebrow: 'API-сервис',
+                title: 'Этот домен предназначен для API-доступа, а не для прямого просмотра.',
+                description: 'Он проверяет heartbeat-вызовы, отдает публичный список активных серверов и предоставляет backend-функции для браузера и лаунчера.',
+                legend_eyebrow: 'Роль сервиса',
+                legend_title: 'Ключевые endpoints',
+                legend_desc_1: 'Возвращает текущий JSON-список активных серверов.',
+                legend_desc_2: 'Принимает heartbeat-обновления от dedicated серверов.',
+                card_1_eyebrow: 'Публичный список',
+                card_1_title: 'Обнаружение серверов',
+                card_1_desc: 'Браузер и лаунчер используют один и тот же endpoint списка серверов.',
+                card_2_eyebrow: 'Heartbeat',
+                card_2_title: 'Статус сервера',
+                card_2_desc: 'Dedicated серверы периодически подтверждают здесь, что они живы, и обновляют число игроков.',
+                card_3_eyebrow: 'Схема',
+                card_3_title: 'Общая модель данных',
+                card_3_desc: '`servers.sql` определяет поля реестра, на которых говорят браузер, панель управления и backend.'
+            }
+        };
+    </script>
+    <script src="assets/site.js?v=8f17b1d09cc5"></script>
+<footer class="community-footer" aria-label="SkyMP Worlds"><a class="docs-link" data-platform-docs="footer" href="https://docs.skymp-worlds.net/?lang=en">Documentation <span aria-hidden="true">↗</span></a><a class="docs-link" data-platform-downloads="footer" href="https://update.skymp-worlds.net/index.html?lang=en">Downloads <span aria-hidden="true">↗</span></a><a class="community-link" data-platform-community="footer" href="https://discord.gg/NSXtNNbjuR" target="_blank" rel="noopener noreferrer">SkyMP Discord <span aria-hidden="true">↗</span></a></footer>
+<script src="assets/country-flags.js?v=0c29f00b2b6d" defer></script>
+</body>
+</html>

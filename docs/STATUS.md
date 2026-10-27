@@ -1,6 +1,6 @@
 # Projektstand und Prüfnachweise
 
-Stand: **26. Oktober 2026**. Aktuelle Launcher-Version: **0.2.0**. Diese Übersicht unterscheidet implementierte Funktionen, automatisierte lokale Prüfungen und Rückmeldungen aus dem Spiel.
+Stand: **27. Oktober 2026**. Aktuelle Launcher-Version: **0.2.1**. Diese Übersicht unterscheidet implementierte Funktionen, automatisierte lokale Prüfungen und Rückmeldungen aus dem Spiel.
 
 ## Implementierter Stand
 
@@ -12,16 +12,17 @@ Stand: **26. Oktober 2026**. Aktuelle Launcher-Version: **0.2.0**. Diese Übersi
 | Anmeldung | Steam-Ticket, Server-Policy, zusätzliche Spielernamen und bedarfsabhängige Legacy-Kontoanmeldung | Erfordert passende Serverimplementierung und gültige Serverkonfiguration |
 | Oberfläche | DE/EN/RU, Streamer-Modus, optionaler Hintergrundklang und Discord-Aktivität | Betrieb von Discord/OAuth separat prüfen |
 | Start und Diagnose | Splash mit Fortschritt und automatischem Schließen nach Startbestätigung; echte Prozess-/Exitcode-Beobachtung; zustimmungsbasierte Crashreports | Vollständige Mehrspieler-/Langzeitabnahme je Freigabe |
-| Veröffentlichung | Windows-x64-EXE, portables ZIP, Lizenzen und SHA-256 für manuelle GitHub-Releases | Signierter Selbstupdateablauf ist nicht implementiert |
+| Veröffentlichung | Windows-x64-EXE, portables ZIP, Lizenzen, SHA-256 und Authenticode-Prüfung; automatischer Release blockiert ohne Signatur | Signieranbieter fehlt; Kandidat ist unsigniert; signierter Selbstupdateablauf ist nicht implementiert |
 
 ## Aktueller Windows-Release
 
-Die lokal vorbereitete Ausgabe liegt unter `local-builds/releases/v0.2.0/`. Ihr Launcher-Quellstand ist Commit `e599a8145958d7850e6b8450d0f28c8ad98fb916`. Dokumentationsänderungen danach erzeugen keine neue EXE.
+Die lokal vorbereitete Ausgabe liegt unter `local-builds/releases/v0.2.1/`. Der zugehörige Quellcommit steht in BUILD-INFO.json und im Tag v0.2.1. Die Paketprüfung dokumentiert die saubere Arbeitskopie und SHA-256. Git-Tag und GitHub-Release-Veröffentlichung sind getrennte Schritte.
 
-Nur die drei Dateien unter `upload/` sind GitHub-Release-Assets:
+Die vier Dateien unter `upload/` sind GitHub-Release-Assets:
 
-- `SkyMP-Launcher-v0.2.0.exe`
-- `SkyMP-Launcher-v0.2.0-windows-x64.zip`
+- `SkyMP-Launcher-v0.2.1.exe`
+- `SkyMP-Launcher-v0.2.1-Full-windows-x64.zip`
+- `SkyMP-Launcher-v0.2.1-Update-windows-x64.zip`
 - `SHA256SUMS`
 
 `portable/` ist der Rohinhalt des ZIPs; `diagnostics/` enthält lokale Protokolle und passende Debugsymbole. Beide Ordner gehören nicht zusätzlich zum Upload. Tag und GitHub-Release werden manuell eingerichtet; ihre Veröffentlichung wird aus dem lokalen Build nicht abgeleitet.
@@ -29,13 +30,13 @@ Nur die drei Dateien unter `upload/` sind GitHub-Release-Assets:
 Am 26.10.2026 bestanden:
 
 - TypeScript-/Vite-Produktionsbuild und Windows-x64-Tauri-Releasebuild.
-- **69 Rust-Tests**, **0 fehlgeschlagen**, **3 separate Integrationsprüfungen ausgenommen**.
-- Prüfung der zehn Dateien im portablen ZIP gegen Größen und SHA-256.
+- **74 Rust-Tests**, **0 fehlgeschlagen**, **3 separate Integrationsprüfungen ausgenommen**; einschließlich nativer Dokumente-/Systemabfragen.
+- Prüfung aller 13 Full- und 10 Update-Dateien gegen Größen und SHA-256; identische EXE in beiden ZIPs.
 - Passende EXE/PDB-Symbole über GUID und Age; Symbole bleiben im Diagnoseordner.
 
-Nachweise: `local-builds/releases/v0.2.0/VALIDATION.json` und die Protokolle in dessen `diagnostics/`. Diese lokalen Builddateien sind nicht Teil des Git-Repositorys.
+Nachweise: `local-builds/releases/v0.2.1/VALIDATION.json` und die Protokolle in dessen `diagnostics/`. Die EXE mit SHA-256 `8c18cd09c61b4454060a8bcb2f5afb10db63d14408a0165405b15c05ca7059d1` bestand den lokalen Defender-Dateiscan mit Signaturen `1.461.211.0`, Dateiausnahmen ignoriert und Bereinigung deaktiviert. Sie ist **nicht signiert**. Ein Download-/Starttest auf anderen Rechnern, SmartScreen und eine Microsoft-Fehlalarmentscheidung sind offen; siehe [Antivirus-Befund](ANTIVIRUS.md). Diese lokalen Builddateien sind nicht Teil des Git-Repositorys.
 
-Die Splash-Änderung wurde zusätzlich mit der echten React-Komponente und einer simulierten Tauri-Schnittstelle in DE/EN/RU geprüft: noch laufende Vorbereitung, automatisches Schließen bei Erfolg, sichtbarer Startfehler und Vorbereitung ohne Spielstart. Das ist ein UI-Nachweis, kein echter Steam-/Serversitzungstest.
+Die Splash-Änderung wurde für v0.2.0 zusätzlich mit der echten React-Komponente und einer simulierten Tauri-Schnittstelle in DE/EN/RU geprüft: noch laufende Vorbereitung, automatisches Schließen bei Erfolg, sichtbarer Startfehler und Vorbereitung ohne Spielstart. Diese Oberfläche wird durch den 0.2.1-Hotfix nicht verändert. Das ist ein früherer UI-Nachweis, kein neuer Steam-/Serversitzungstest.
 
 ## Spielrückmeldung und externe Runtime
 
@@ -51,8 +52,8 @@ Die lokale Spielerprofil-Korrektur im Server-Fork und das zugehörige VPS-Update
 
 ## English / Русский
 
-The 0.2.0 Windows launcher is built and packaged locally, with 69 passing Rust tests and three excluded integration tests. The user confirmed startup and movement with the separate native runtime. Broader multiplayer and production acceptance remain separate; a release tag or upload is not implied.
+The 0.2.1 Windows launcher candidate is built and packaged locally, with 74 passing Rust tests and three excluded integration tests. Its exact EXE passed a local Defender file scan with file exclusions ignored and remediation disabled, but remains unsigned. Real download/start on other PCs and SmartScreen remain unverified. The earlier startup/movement report concerns the separate native runtime; no tag or upload is implied.
 
-Лаунчер 0.2.0 для Windows собран локально: 69 тестов пройдены, три отдельные интеграционные проверки исключены. Пользователь подтвердил запуск и движение в игре с отдельной нативной средой. Расширенная игровая проверка, боевые сервисы и публикация релиза проверяются отдельно.
+Кандидат лаунчера 0.2.1 для Windows собран локально: 74 теста пройдены, три отдельные интеграционные проверки исключены. Итоговая EXE прошла локальное сканирование Defender с игнорированием исключений и без исправления, но не подписана. Реальное скачивание/запуск на других ПК и SmartScreen не проверены. Прежнее подтверждение запуска и движения относится к отдельной нативной среде; тег и публикация не выполнялись.
 
 Weiter: [Roadmap](../ROADMAP.md), [Release-Anleitung](RELEASING.md), [Live-Abnahme](LIVE_ROLLOUT_CHECKLIST.md).

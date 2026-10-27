@@ -3,9 +3,13 @@ import { createPortal } from 'react-dom';
 import { invoke } from '@tauri-apps/api/tauri';
 import { privateText, validPlayerName, type Language, type LauncherPreferences } from './launcherPreferences';
 import './LauncherSettings.css';
+import WorldsAccount from './WorldsAccount';
+import LauncherUpdateNotice from './LauncherUpdateNotice';
+import type {UpdateState} from './launcherUpdates';
 
 export interface PresenceStatus { state: string; discordUser?: string | null }
-interface SteamAccount { steamId: string; personaName?: string | null }
+export interface SteamAccount { steamId: string; personaName?: string | null }
+export interface SteamSnapshot { path: string; account: SteamAccount }
 const copy = {
   de: {
     title: 'Einstellungen', close: 'Schließen', account: 'Konto', interface: 'Interface', game: 'Spiel',
@@ -79,13 +83,17 @@ interface Props {
   preferences: LauncherPreferences; onPreferences: (value: LauncherPreferences) => void; storageError: boolean;
   path: string; onPath: (value: string) => void; onVerify: () => void; checkingPath: boolean; pathStatus: string;
   savedPath: string; onClearHistory: () => boolean; presence: PresenceStatus;
+  steamSnapshot: SteamSnapshot | null; onSteamSnapshot: (value: SteamSnapshot | null) => void;
+  updates: UpdateState; onCheckUpdates: () => void;
   openExternal: (url: string) => void; onClose: () => void;
 }
 export default function LauncherSettings(props: Props) {
   const { language, preferences, presence } = props; const t = copy[language];
   const [tab, setTab] = useState<'account' | 'interface' | 'game'>('account');
   const [name, setName] = useState(preferences.playerName); const [feedback, setFeedback] = useState('');
-  const [account, setAccount] = useState<SteamAccount | null>(null); const [accountError, setAccountError] = useState(''); const [checkingAccount, setCheckingAccount] = useState(false);
+  const account = props.steamSnapshot?.path === props.savedPath ? props.steamSnapshot.account : null;
+  const [accountError, setAccountError] = useState(''); const [checkingAccount, setCheckingAccount] = useState(false);
+  const steamRequest = useRef(false);
   const dialog = useRef<HTMLDivElement>(null); const title = useRef<HTMLHeadingElement>(null);
   const change = (patch: Partial<LauncherPreferences>) => { setFeedback(''); props.onPreferences({ ...preferences, ...patch }); };
   useEffect(() => {
@@ -94,10 +102,13 @@ export default function LauncherSettings(props: Props) {
     return () => { if (root) root.inert = wasInert; document.body.style.overflow = overflow; previous?.focus(); };
   }, []);
   const checkAccount = async () => {
+    if (steamRequest.current) return; steamRequest.current = true;
     setCheckingAccount(true); setAccountError('');
-    try { setAccount(await invoke<SteamAccount>('steam_account', { skyrimDir: props.savedPath || null })); }
-    catch { setAccount(null); setAccountError(t.steamHint); } finally { setCheckingAccount(false); }
+    const path = props.savedPath;
+    try { props.onSteamSnapshot({ path, account: await invoke<SteamAccount>('steam_account', { skyrimDir: path || null }) }); }
+    catch { props.onSteamSnapshot(null); setAccountError(t.steamHint); } finally { steamRequest.current = false; setCheckingAccount(false); }
   };
+  useEffect(() => { if (props.savedPath && !account) void checkAccount(); }, [props.savedPath]);
   const status = presence.state === 'connected' ? t.connected : presence.state === 'connecting' ? t.connecting : presence.state === 'notConfigured' ? t.notConfigured : presence.state === 'disabled' ? t.disabled : t.unavailable;
   return createPortal(<div className="settings-layer">
     <div className="settings-backdrop" onClick={props.onClose} />
@@ -115,6 +126,7 @@ export default function LauncherSettings(props: Props) {
         <section className="settings-content" aria-label={t[tab]}><h2 tabIndex={-1} ref={title}>{t[tab]}</h2>
           {props.storageError && <p className="error" role="alert">{t.storage}</p>}
           {tab === 'account' && <>
+            <WorldsAccount language={language} hidden={preferences.streamerMode} openExternal={props.openExternal} />
             <div className="setting-block"><h3>{t.steam}</h3><p className="settings-account-name">{preferences.streamerMode ? t.private : account?.personaName || t.unknown}</p><p>{t.steamHint}</p><button className="btn-refresh" disabled={checkingAccount || !props.savedPath} onClick={() => void checkAccount()}>{checkingAccount ? t.checking : t.refresh}</button>{accountError && <p role="status">{accountError}</p>}</div>
             <form className="setting-block" onSubmit={event => { event.preventDefault(); if (!validPlayerName(name)) { setFeedback(t.invalidName); return; } props.onPreferences({ ...preferences, playerName: name.trim() }); setFeedback(t.saved); }}>
               <label htmlFor="settings-player-name">{t.name}</label><input id="settings-player-name" type={preferences.streamerMode ? 'password' : 'text'} autoComplete="off" value={name} onChange={event => { setName(event.target.value); setFeedback(''); }} aria-describedby="settings-name-hint" /><p id="settings-name-hint">{t.nameHint}</p><button className="btn-refresh" type="submit">{t.save}</button>
@@ -129,7 +141,8 @@ export default function LauncherSettings(props: Props) {
             <div className="setting-block"><button className="btn-refresh" onClick={() => setFeedback(props.onClearHistory() ? t.cleared : t.storage)}>{t.history}</button><p>{t.historyHint}</p></div>
           </>}
           {tab === 'game' && <>
-            <div className="setting-block"><label htmlFor="settings-update-channel">{t.channel}</label><select id="settings-update-channel" value={preferences.updateChannel} onChange={event => change({ updateChannel: event.target.value as LauncherPreferences['updateChannel'] })}><option value="release">{t.release}</option><option value="beta">{t.beta}</option><option value="latest">{t.latest}</option></select><p>{t.channelHint}</p>{preferences.updateChannel === 'release' && <p className="settings-notice">{t.releaseMissing}</p>}</div>
+            <LauncherUpdateNotice updates={props.updates} language={language} onCheck={props.onCheckUpdates} openExternal={props.openExternal} settings />
+            <div className="setting-block"><label htmlFor="settings-update-channel">{t.channel}</label><select id="settings-update-channel" value={preferences.updateChannel} onChange={event => change({ updateChannel: event.target.value as LauncherPreferences['updateChannel'] })}><option value="release">{t.release}</option><option value="beta">{t.beta}</option><option value="latest">{t.latest}</option></select><p>{t.channelHint}</p>{preferences.updateChannel === 'release' && props.updates.checked && !props.updates.error && !props.updates.release && <p className="settings-notice">{t.releaseMissing}</p>}</div>
             <div className="setting-block"><label htmlFor="skyrim-install-path">{t.path}</label><input id="skyrim-install-path" type={preferences.streamerMode ? 'password' : 'text'} value={props.path} onChange={event => props.onPath(event.target.value)} disabled={props.checkingPath} autoComplete="off" /><button className="btn-refresh" onClick={props.onVerify} disabled={props.checkingPath}>{props.checkingPath ? t.checking : t.verify}</button>{props.pathStatus && <p role="status">{privateText(props.pathStatus, preferences.streamerMode, language)}</p>}</div>
             <div className="setting-block"><label htmlFor="settings-discord-activity">{t.discord}</label><select id="settings-discord-activity" value={preferences.discordActivity} onChange={event => change({ discordActivity: event.target.value as LauncherPreferences['discordActivity'] })}><option value="enabled">{t.enabled}</option><option value="hidden">{t.hidden}</option><option value="disabled">{t.disabled}</option></select><p>{t.discordHint}</p><p role="status" className="settings-connection-status" data-connected={presence.state === 'connected'}>{status}{presence.discordUser && !preferences.streamerMode && preferences.discordActivity !== 'disabled' ? ` · ${presence.discordUser}` : ''}</p></div>
             <div className="setting-block"><h3>{t.connection}</h3><p>{t.automatic}</p><p>{t.portHint}</p></div>

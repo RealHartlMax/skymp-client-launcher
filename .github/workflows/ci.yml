@@ -41,7 +41,9 @@ jobs:
       - name: Test independent PHP document roots
         env:
           PHP_BINARY: php
-        run: node tests/php-master-smoke.mjs
+        run: |
+          node tests/php-master-smoke.mjs
+          node tests/launcher-account.mjs
       - name: Test crash storage and developer portal
         env:
           PHP_BINARY: php
@@ -95,6 +97,10 @@ jobs:
         run: |
           Set-Location launcher
           npm run build
+
+      - name: Test official launcher version checks
+        shell: pwsh
+        run: node tests/launcher-updates.mjs
 
       - name: Cargo check (Tauri backend)
         shell: pwsh
